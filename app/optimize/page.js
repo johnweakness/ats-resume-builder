@@ -137,7 +137,17 @@ export default function OptimizePage() {
               />
             </div>
 
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? (
+              <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                <span className="text-xl leading-none">⚠️</span>
+                <div>
+                  <p className="text-sm font-semibold text-red-700">
+                    We couldn't process your file
+                  </p>
+                  <p className="mt-1 text-sm text-red-600">{error}</p>
+                </div>
+              </div>
+            ) : null}
 
             {loading && slowNotice ? (
               <p className="text-sm text-slate-500">

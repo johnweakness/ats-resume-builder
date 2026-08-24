@@ -33,6 +33,9 @@ export async function POST(request) {
     let text = "";
     let photo = null;
 
+    const PDF_HELP =
+      "We couldn't pull any readable text from this PDF. This usually happens when the PDF is a scanned image, a photo, or was exported oddly. Please try one of these: (1) Open the resume in Word/Google Docs and re-export it as a new PDF, (2) upload the original DOCX or TXT file instead, or (3) if it's a scanned document, use an OCR tool to make the text selectable first.";
+
     if (name.endsWith(".pdf") || file.type === "application/pdf") {
       const { default: pdfParse } = await import("pdf-parse");
       try {
@@ -43,27 +46,41 @@ export async function POST(request) {
         return Response.json(
           {
             error:
-              "This PDF couldn't be read (it may be scanned/image-based, password-protected, or corrupted). Try re-exporting it as a fresh PDF, or upload a DOCX/TXT version instead.",
+              "This PDF couldn't be opened (it may be password-protected, corrupted, or not a real PDF file). Please try re-saving/re-exporting it as a new PDF, or upload a DOCX or TXT version instead.",
           },
           { status: 422 }
         );
+      }
+      if (!text.trim()) {
+        return Response.json({ error: PDF_HELP }, { status: 422 });
       }
     } else if (
       name.endsWith(".docx") ||
       file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      const mammoth = await import("mammoth");
-      // Grab the first embedded image (typically the profile photo) as a data URL.
-      const imageConverter = mammoth.images.imgElement(async (image) => {
-        if (!photo) {
-          const base64 = await image.read("base64");
-          photo = `data:${image.contentType};base64,${base64}`;
-        }
-        return {};
-      });
-      const result = await mammoth.extractRawText({ buffer });
-      await mammoth.convertToHtml({ buffer }, { convertImage: imageConverter });
-      text = result.value;
+      try {
+        const mammoth = await import("mammoth");
+        // Grab the first embedded image (typically the profile photo) as a data URL.
+        const imageConverter = mammoth.images.imgElement(async (image) => {
+          if (!photo) {
+            const base64 = await image.read("base64");
+            photo = `data:${image.contentType};base64,${base64}`;
+          }
+          return {};
+        });
+        const result = await mammoth.extractRawText({ buffer });
+        await mammoth.convertToHtml({ buffer }, { convertImage: imageConverter });
+        text = result.value;
+      } catch (docxErr) {
+        console.error("mammoth error:", docxErr);
+        return Response.json(
+          {
+            error:
+              "This DOCX file couldn't be opened (it may be corrupted or not a real Word file). Please try re-saving it from Word/Google Docs, or upload a PDF or TXT version instead.",
+          },
+          { status: 422 }
+        );
+      }
     } else if (name.endsWith(".txt") || file.type === "text/plain") {
       text = buffer.toString("utf-8");
     } else {
@@ -77,7 +94,10 @@ export async function POST(request) {
 
     if (!text) {
       return Response.json(
-        { error: "Could not extract any text from this file." },
+        {
+          error:
+            "Could not find any readable text in this file. Please double-check it actually contains your resume content, then try re-saving it as a new PDF/DOCX/TXT and upload again.",
+        },
         { status: 422 }
       );
     }
