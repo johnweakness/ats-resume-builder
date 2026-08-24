@@ -20,6 +20,7 @@ export async function POST(request) {
     const name = (file.name || "").toLowerCase();
 
     let text = "";
+    let photo = null;
 
     if (name.endsWith(".pdf") || file.type === "application/pdf") {
       const { default: pdfParse } = await import("pdf-parse");
@@ -30,7 +31,16 @@ export async function POST(request) {
       file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
       const mammoth = await import("mammoth");
+      // Grab the first embedded image (typically the profile photo) as a data URL.
+      const imageConverter = mammoth.images.imgElement(async (image) => {
+        if (!photo) {
+          const base64 = await image.read("base64");
+          photo = `data:${image.contentType};base64,${base64}`;
+        }
+        return {};
+      });
       const result = await mammoth.extractRawText({ buffer });
+      await mammoth.convertToHtml({ buffer }, { convertImage: imageConverter });
       text = result.value;
     } else if (name.endsWith(".txt") || file.type === "text/plain") {
       text = buffer.toString("utf-8");
@@ -50,7 +60,8 @@ export async function POST(request) {
       );
     }
 
-    return Response.json({ text });
+    return Response.json({ text, photo });
+
   } catch (err) {
     console.error("parse-resume error:", err);
     return Response.json(

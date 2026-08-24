@@ -53,7 +53,9 @@ export default function OptimizePage() {
       const optimizeData = await optimizeRes.json();
       if (!optimizeRes.ok) throw new Error(optimizeData.error || "Failed to optimize the resume.");
 
-      setResume(normalizeResume(optimizeData.resume));
+      const normalized = normalizeResume(optimizeData.resume);
+      if (parseData.photo) normalized.photo = parseData.photo;
+      setResume(normalized);
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
