@@ -15,7 +15,7 @@ export default function Home() {
         />
         <h1 className="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">ATS Resume Builder</h1>
         <p className="mx-auto mt-3 max-w-xl text-slate-500">
-          Build a clean, ATS-friendly resume in minutes. No sign-up, no clutter.
+          Build a clean, ATS-friendly resume in minutes. No sign-up, no credits.
         </p>
 
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
