@@ -54,7 +54,7 @@ Given a candidate's existing resume text and a target job description, rewrite t
 - Preserves the candidate's real contact details, education, and project/experience entries
 - Fits the exact JSON schema provided, with "skills" as a single string of skills separated by "; "
 - Sets "experienceHeading" to "EXPERIENCE" or "PROJECTS" depending on what best matches the source resume
-- If a target job role is provided, sets "jobTitle" to that role (or a close professional variant) and tailors the objective and bullets toward it
+- Sets "jobTitle" to the given target job role (or a close professional variant) and tailors the objective and bullets toward it
 Return only the structured data.`;
 
 export async function POST(request) {
@@ -69,18 +69,16 @@ export async function POST(request) {
 
     const { resumeText, jobDescription, targetJobRole } = await request.json();
 
-    if (!resumeText?.trim() || !jobDescription?.trim()) {
+    if (!resumeText?.trim() || !jobDescription?.trim() || !targetJobRole?.trim()) {
       return Response.json(
-        { error: "Both the resume content and job description are required." },
+        { error: "The resume content, target job role, and job description are all required." },
         { status: 400 }
       );
     }
 
     const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `CANDIDATE RESUME:\n"""\n${resumeText}\n"""\n\n${
-      targetJobRole?.trim() ? `TARGET JOB ROLE: ${targetJobRole.trim()}\n\n` : ""
-    }TARGET JOB DESCRIPTION:\n"""\n${jobDescription}\n"""\n\nRewrite and optimize the resume for this job description following the JSON schema.`;
+    const prompt = `CANDIDATE RESUME:\n"""\n${resumeText}\n"""\n\nTARGET JOB ROLE: ${targetJobRole.trim()}\n\nTARGET JOB DESCRIPTION:\n"""\n${jobDescription}\n"""\n\nRewrite and optimize the resume for this job role and job description following the JSON schema.`;
 
     const result = await ai.models.generateContent({
       model: MODEL,

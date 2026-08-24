@@ -24,6 +24,10 @@ export default function OptimizePage() {
       setError("Please upload your current resume file.");
       return;
     }
+    if (!targetJobRole.trim()) {
+      setError("Please enter the target job role.");
+      return;
+    }
     if (!jobDescription.trim()) {
       setError("Please paste the target job description.");
       return;
@@ -81,7 +85,7 @@ export default function OptimizePage() {
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Target job role <span className="font-normal text-slate-400">(optional)</span>
+                Target job role
               </label>
               <input
                 type="text"
