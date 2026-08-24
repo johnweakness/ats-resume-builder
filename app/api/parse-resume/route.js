@@ -1,9 +1,20 @@
 export const runtime = "nodejs";
 
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const { ok, retryAfterMs } = rateLimit(`parse-resume:${ip}`, { limit: 15, windowMs: 60_000 });
+    if (!ok) {
+      return Response.json(
+        { error: "Too many requests. Please wait a moment before trying again." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
 

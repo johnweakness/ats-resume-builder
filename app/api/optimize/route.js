@@ -1,9 +1,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
 // gemini-2.5-flash: current stable, cost-efficient model (see ai.google.dev/gemini-api/docs/models)
 const MODEL = "gemini-2.5-flash";
+const MAX_RESUME_CHARS = 20_000;
+const MAX_JOB_DESC_CHARS = 10_000;
+const MAX_JOB_ROLE_CHARS = 200;
 
 const resumeSchema = {
   type: Type.OBJECT,
@@ -67,12 +71,32 @@ export async function POST(request) {
       );
     }
 
+    const ip = getClientIp(request);
+    const { ok, retryAfterMs } = rateLimit(`optimize:${ip}`, { limit: 5, windowMs: 60_000 });
+    if (!ok) {
+      return Response.json(
+        { error: "Too many requests. Please wait a moment before trying again." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+      );
+    }
+
     const { resumeText, jobDescription, targetJobRole } = await request.json();
 
     if (!resumeText?.trim() || !jobDescription?.trim() || !targetJobRole?.trim()) {
       return Response.json(
         { error: "The resume content, target job role, and job description are all required." },
         { status: 400 }
+      );
+    }
+
+    if (
+      resumeText.length > MAX_RESUME_CHARS ||
+      jobDescription.length > MAX_JOB_DESC_CHARS ||
+      targetJobRole.length > MAX_JOB_ROLE_CHARS
+    ) {
+      return Response.json(
+        { error: "One of the inputs is too long. Please shorten your resume, job description, or job role." },
+        { status: 413 }
       );
     }
 
