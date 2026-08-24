@@ -194,6 +194,7 @@ export default function ResumeForm({ data, onChange }) {
                     className={inputClass}
                     value={edu.degree}
                     onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
+                    placeholder="Bachelor of Science in Information Technology"
                   />
                 </Field>
                 <Field label="School">
@@ -201,6 +202,7 @@ export default function ResumeForm({ data, onChange }) {
                     className={inputClass}
                     value={edu.school}
                     onChange={(e) => updateEducation(edu.id, "school", e.target.value)}
+                    placeholder="Your University"
                   />
                 </Field>
                 <Field label="Location">
@@ -208,6 +210,7 @@ export default function ResumeForm({ data, onChange }) {
                     className={inputClass}
                     value={edu.location}
                     onChange={(e) => updateEducation(edu.id, "location", e.target.value)}
+                    placeholder="City, Province"
                   />
                 </Field>
                 <div className="grid grid-cols-2 gap-4">
@@ -257,6 +260,7 @@ export default function ResumeForm({ data, onChange }) {
                     className={inputClass}
                     value={exp.title}
                     onChange={(e) => updateEntry("experience", exp.id, "title", e.target.value)}
+                    placeholder="Company Name"
                   />
                 </Field>
                 <Field label="Job Title / Role">
@@ -264,6 +268,7 @@ export default function ResumeForm({ data, onChange }) {
                     className={inputClass}
                     value={exp.role}
                     onChange={(e) => updateEntry("experience", exp.id, "role", e.target.value)}
+                    placeholder="Your Job Title"
                   />
                 </Field>
                 <Field label="Link (optional)">
@@ -292,6 +297,7 @@ export default function ResumeForm({ data, onChange }) {
                         className={`${inputClass} min-h-[44px]`}
                         value={bullet}
                         onChange={(e) => updateEntryBullet("experience", exp.id, i, e.target.value)}
+                        placeholder="Describe a responsibility and its measurable result."
                       />
                       {exp.bullets.length > 1 ? (
                         <RemoveButton onClick={() => removeEntryBullet("experience", exp.id, i)} />
@@ -337,6 +343,7 @@ export default function ResumeForm({ data, onChange }) {
                     className={inputClass}
                     value={proj.title}
                     onChange={(e) => updateEntry("projects", proj.id, "title", e.target.value)}
+                    placeholder="Project Name"
                   />
                 </Field>
                 <Field label="Your Role">
@@ -344,6 +351,7 @@ export default function ResumeForm({ data, onChange }) {
                     className={inputClass}
                     value={proj.role}
                     onChange={(e) => updateEntry("projects", proj.id, "role", e.target.value)}
+                    placeholder="e.g. Team Lead, Developer"
                   />
                 </Field>
                 <Field label="Link (optional)">
@@ -372,6 +380,7 @@ export default function ResumeForm({ data, onChange }) {
                         className={`${inputClass} min-h-[44px]`}
                         value={bullet}
                         onChange={(e) => updateEntryBullet("projects", proj.id, i, e.target.value)}
+                        placeholder="Describe what the project does and the problem it solves."
                       />
                       {proj.bullets.length > 1 ? (
                         <RemoveButton onClick={() => removeEntryBullet("projects", proj.id, i)} />
