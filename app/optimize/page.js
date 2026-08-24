@@ -11,6 +11,7 @@ import { normalizeResume } from "@/lib/defaultResume";
 
 export default function OptimizePage() {
   const [file, setFile] = useState(null);
+  const [targetJobRole, setTargetJobRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -43,7 +44,7 @@ export default function OptimizePage() {
       const optimizeRes = await fetch("/api/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeText: parseData.text, jobDescription }),
+        body: JSON.stringify({ resumeText: parseData.text, jobDescription, targetJobRole }),
       });
       const optimizeData = await optimizeRes.json();
       if (!optimizeRes.ok) throw new Error(optimizeData.error || "Failed to optimize the resume.");
@@ -76,6 +77,19 @@ export default function OptimizePage() {
                 Your current resume
               </label>
               <FileDropzone file={file} onFileSelected={setFile} />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Target job role <span className="font-normal text-slate-400">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={targetJobRole}
+                onChange={(e) => setTargetJobRole(e.target.value)}
+                placeholder="e.g. Software Engineer, Marketing Assistant"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+              />
             </div>
 
             <div>
