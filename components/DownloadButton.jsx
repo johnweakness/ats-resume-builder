@@ -2,12 +2,17 @@
 
 import { useState } from "react";
 import Spinner from "./Spinner";
+import { getMissingResumeFields } from "@/lib/defaultResume";
 
 export default function DownloadButton({ data, className = "" }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const missingFields = getMissingResumeFields(data);
+  const isIncomplete = missingFields.length > 0;
+
   async function handleDownload() {
+    if (isIncomplete) return;
     setError("");
     setLoading(true);
     try {
@@ -34,13 +39,20 @@ export default function DownloadButton({ data, className = "" }) {
       <button
         type="button"
         onClick={handleDownload}
-        disabled={loading}
+        disabled={loading || isIncomplete}
+        title={isIncomplete ? `Please fill in: ${missingFields.join(", ")}` : undefined}
         className={`inline-flex items-center gap-2 rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
       >
         {loading ? <Spinner className="h-4 w-4" /> : null}
         {loading ? "Preparing PDF..." : "Download PDF"}
       </button>
+      {isIncomplete ? (
+        <p className="max-w-xs text-right text-xs text-amber-600">
+          Please fill in before downloading: {missingFields.join(", ")}
+        </p>
+      ) : null}
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>
   );
 }
+
