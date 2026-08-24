@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import FileDropzone from "@/components/FileDropzone";
 import ResumeForm from "@/components/ResumeForm";
@@ -8,6 +8,8 @@ import ResumePreview from "@/components/ResumePreview";
 import DownloadButton from "@/components/DownloadButton";
 import Spinner from "@/components/Spinner";
 import { normalizeResume } from "@/lib/defaultResume";
+
+const STORAGE_KEY = "atsResumeBuilder:optimize";
 
 export default function OptimizePage() {
   const [file, setFile] = useState(null);
@@ -17,6 +19,36 @@ export default function OptimizePage() {
   const [slowNotice, setSlowNotice] = useState(false);
   const [error, setError] = useState("");
   const [resume, setResume] = useState(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restore in-progress work so a refresh doesn't wipe out the user's form.
+  // Note: the uploaded file itself can't be persisted, so it must be re-selected.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.targetJobRole) setTargetJobRole(parsed.targetJobRole);
+        if (parsed.jobDescription) setJobDescription(parsed.jobDescription);
+        if (parsed.resume) setResume(parsed.resume);
+      }
+    } catch {
+      // Ignore corrupt/unavailable storage and start fresh.
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ targetJobRole, jobDescription, resume })
+      );
+    } catch {
+      // Storage may be full or disabled; not critical to persist.
+    }
+  }, [targetJobRole, jobDescription, resume, hydrated]);
 
   async function fetchWithTimeout(url, options, timeoutMs) {
     const controller = new AbortController();
@@ -178,7 +210,10 @@ export default function OptimizePage() {
               </div>
               <button
                 type="button"
-                onClick={() => setResume(null)}
+                onClick={() => {
+                  setResume(null);
+                  setFile(null);
+                }}
                 className="mt-3 text-xs font-medium text-slate-500 hover:text-blue-700 hover:underline"
               >
                 &larr; Start over with a different file

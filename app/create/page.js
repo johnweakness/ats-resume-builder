@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import ResumeForm from "@/components/ResumeForm";
 import ResumePreview from "@/components/ResumePreview";
@@ -8,9 +8,39 @@ import DownloadButton from "@/components/DownloadButton";
 import { emptyResume } from "@/lib/defaultResume";
 import { RESUME_TEMPLATES } from "@/lib/resumeTemplates";
 
+const STORAGE_KEY = "atsResumeBuilder:create";
+
 export default function CreatePage() {
   const [template, setTemplate] = useState(undefined);
   const [data, setData] = useState(emptyResume());
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restore in-progress work so a refresh doesn't wipe out the user's form.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.data) setData(parsed.data);
+        if (parsed.started) setTemplate("blank");
+      }
+    } catch {
+      // Ignore corrupt/unavailable storage and start fresh.
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ started: template !== undefined, data })
+      );
+    } catch {
+      // Storage may be full or disabled; not critical to persist.
+    }
+  }, [template, data, hydrated]);
 
   function chooseTemplate(t) {
     setTemplate(t ?? "blank");
