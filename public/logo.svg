@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ATS Resume Builder logo">
+  <rect width="512" height="512" rx="96" fill="#1d4ed8"/>
+
+  <!-- document -->
+  <rect x="146" y="112" width="180" height="240" rx="16" fill="#ffffff"/>
+  <rect x="176" y="160" width="120" height="14" rx="7" fill="#1d4ed8" opacity="0.85"/>
+  <rect x="176" y="196" width="120" height="14" rx="7" fill="#1d4ed8" opacity="0.55"/>
+  <rect x="176" y="232" width="90" height="14" rx="7" fill="#1d4ed8" opacity="0.55"/>
+  <rect x="176" y="268" width="120" height="14" rx="7" fill="#1d4ed8" opacity="0.55"/>
+  <rect x="176" y="304" width="70" height="14" rx="7" fill="#1d4ed8" opacity="0.55"/>
+
+  <!-- ATS check badge -->
+  <circle cx="352" cy="356" r="68" fill="#ffffff"/>
+  <circle cx="352" cy="356" r="56" fill="#1d4ed8"/>
+  <path d="M326 356l18 18 40 -44" stroke="#ffffff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

@@ -1,10 +1,19 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 py-16">
       <div className="w-full max-w-3xl text-center">
-        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">ATS Resume Builder</h1>
+        <Image
+          src="/logo.svg"
+          alt="ATS Resume Builder logo"
+          width={56}
+          height={56}
+          className="mx-auto rounded-xl"
+          priority
+        />
+        <h1 className="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">ATS Resume Builder</h1>
         <p className="mx-auto mt-3 max-w-xl text-slate-500">
           Build a clean, ATS-friendly resume in minutes. No sign-up, no clutter.
         </p>
