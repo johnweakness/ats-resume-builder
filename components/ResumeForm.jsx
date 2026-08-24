@@ -1,14 +1,39 @@
 "use client";
 
+import { useState } from "react";
 import { emptyEducation, emptyExperience } from "@/lib/defaultResume";
 
 const inputClass =
   "w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600";
 const labelClass = "mb-1 block text-xs font-medium text-slate-600";
 
+const MAX_PHOTO_SIZE = 2 * 1024 * 1024; // 2MB
+
 export default function ResumeForm({ data, onChange }) {
+  const [photoError, setPhotoError] = useState("");
+
   function set(field, value) {
     onChange({ ...data, [field]: value });
+  }
+
+  function handlePhotoChange(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setPhotoError("");
+    if (!file.type.startsWith("image/")) {
+      setPhotoError("Please upload an image file (PNG or JPG).");
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE) {
+      setPhotoError("Image is too large (max 2MB).");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => set("photo", reader.result);
+    reader.readAsDataURL(file);
   }
 
   function updateEducation(id, field, value) {
@@ -73,6 +98,29 @@ export default function ResumeForm({ data, onChange }) {
   return (
     <div className="space-y-8">
       <Card title="Basic Information">
+        <div className="mb-5 flex items-center gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+            {data.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={data.photo} alt="Profile" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-2xl">🙂</span>
+            )}
+          </div>
+          <div>
+            <label className={labelClass}>Photo (optional)</label>
+            <div className="flex items-center gap-3">
+              <label className="cursor-pointer rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-blue-400 hover:text-blue-700">
+                Upload photo
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+              </label>
+              {data.photo ? (
+                <RemoveButton onClick={() => set("photo", null)} />
+              ) : null}
+            </div>
+            {photoError ? <p className="mt-1 text-xs text-red-600">{photoError}</p> : null}
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Full Name">
             <input

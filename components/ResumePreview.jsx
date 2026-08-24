@@ -9,6 +9,7 @@ export default function ResumePreview({ data }) {
     location,
     phone,
     email,
+    photo,
     objective,
     education = [],
     experienceHeading = "PROJECTS",
@@ -23,12 +24,22 @@ export default function ResumePreview({ data }) {
       id="resume-preview"
       className="mx-auto w-full max-w-[816px] bg-white px-12 py-10 text-[13px] leading-snug text-slate-800 shadow-sm"
     >
-      <header>
-        <h1 className="text-3xl font-bold tracking-wide text-blue-800">
-          {fullName || "Your Name"}
-        </h1>
-        {jobTitle ? <p className="mt-1 text-base text-slate-700">{jobTitle}</p> : null}
-        {contactLine ? <p className="mt-1 text-slate-600">{contactLine}</p> : null}
+      <header className="flex items-start justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-wide text-blue-800">
+            {fullName || "Your Name"}
+          </h1>
+          {jobTitle ? <p className="mt-1 text-base text-slate-700">{jobTitle}</p> : null}
+          {contactLine ? <p className="mt-1 text-slate-600">{contactLine}</p> : null}
+        </div>
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photo}
+            alt=""
+            className="h-24 w-24 shrink-0 rounded object-cover"
+          />
+        ) : null}
       </header>
 
       {objective ? (
