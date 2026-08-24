@@ -43,7 +43,7 @@ export default function ResumePreview({ data }) {
       </header>
 
       {objective ? (
-        <Section heading="OBJECTIVE">
+        <Section heading="PROFESSIONAL SUMMARY">
           <p className="text-slate-700">{objective}</p>
         </Section>
       ) : null}

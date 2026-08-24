@@ -165,13 +165,13 @@ export default function ResumeForm({ data, onChange }) {
         </div>
       </Card>
 
-      <Card title="Objective">
-        <Field label="A short summary of your career goal">
+      <Card title="Professional Summary">
+        <Field label="2-3 sentences about your skills, experience, and what you can offer an employer">
           <textarea
             className={`${inputClass} min-h-[100px]`}
             value={data.objective}
             onChange={(e) => set("objective", e.target.value)}
-            placeholder="To pursue a role where I can apply my skills in..."
+            placeholder="e.g. Recent IT graduate skilled in web development (HTML, CSS, JavaScript), with hands-on experience building school projects. Hardworking, fast learner, and eager to contribute to a Junior Developer role."
           />
         </Field>
       </Card>
