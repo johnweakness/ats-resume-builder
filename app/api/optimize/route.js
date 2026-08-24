@@ -104,24 +104,36 @@ export async function POST(request) {
 
     const prompt = `CANDIDATE RESUME:\n"""\n${resumeText}\n"""\n\nTARGET JOB ROLE: ${targetJobRole.trim()}\n\nTARGET JOB DESCRIPTION:\n"""\n${jobDescription}\n"""\n\nRewrite and optimize the resume for this job role and job description following the JSON schema.`;
 
-    const result = await ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseSchema: resumeSchema,
-      },
-    });
-    const responseText = result.text;
-
+    // Gemini occasionally returns a transient error or a truncated/non-JSON
+    // response; retry a couple of times before surfacing a failure to the user.
+    const MAX_ATTEMPTS = 3;
     let optimized;
-    try {
-      optimized = JSON.parse(responseText);
-    } catch (parseErr) {
-      console.error("Gemini returned non-JSON response:", responseText);
+    let lastError;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const result = await ai.models.generateContent({
+          model: MODEL,
+          contents: prompt,
+          config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+            responseMimeType: "application/json",
+            responseSchema: resumeSchema,
+          },
+        });
+        const responseText = result.text;
+        optimized = JSON.parse(responseText);
+        lastError = null;
+        break;
+      } catch (attemptErr) {
+        lastError = attemptErr;
+        console.error(`optimize attempt ${attempt} failed:`, attemptErr);
+      }
+    }
+
+    if (lastError) {
       return Response.json(
-        { error: "The AI response could not be parsed. Please try again." },
+        { error: "The AI is having trouble right now. Please try again in a moment." },
         { status: 502 }
       );
     }

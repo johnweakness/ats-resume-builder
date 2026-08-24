@@ -35,8 +35,19 @@ export async function POST(request) {
 
     if (name.endsWith(".pdf") || file.type === "application/pdf") {
       const { default: pdfParse } = await import("pdf-parse");
-      const result = await pdfParse(buffer);
-      text = result.text;
+      try {
+        const result = await pdfParse(buffer);
+        text = result.text;
+      } catch (pdfErr) {
+        console.error("pdf-parse error:", pdfErr);
+        return Response.json(
+          {
+            error:
+              "This PDF couldn't be read (it may be scanned/image-based, password-protected, or corrupted). Try re-exporting it as a fresh PDF, or upload a DOCX/TXT version instead.",
+          },
+          { status: 422 }
+        );
+      }
     } else if (
       name.endsWith(".docx") ||
       file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
