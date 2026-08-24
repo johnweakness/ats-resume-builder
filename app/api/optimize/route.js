@@ -68,7 +68,7 @@ const resumeSchema = {
     skills: {
       type: Type.STRING,
       description:
-        "A semicolon-separated string of relevant skills tailored specifically to the target job role and job description. Emphasize transferable skills, relevant tools, and target keywords from the job description while filtering out unrelated technical jargon.",
+        "A semicolon-separated string of skills grounded in the candidate's actual background and matched to the target job role/description. Extract and highlight matching skills, transferable abilities, and tools the candidate actually has or applied in their resume, using the target job keywords without fabricating unmentioned tools.",
     },
   },
   required: ["fullName", "objective", "education", "skills"],
@@ -77,8 +77,9 @@ const resumeSchema = {
 const SYSTEM_INSTRUCTION = `You are an expert resume writer specializing in ATS (Applicant Tracking System) optimization.
 Given a candidate's existing resume text and a target job description, rewrite the resume content so that it:
 - Naturally incorporates relevant keywords and phrasing from the target job description across summary, bullets, and skills
-- Actively tailors the "skills" list to match the target job role and job description requirements (prioritize transferable skills, required tools, software, design/creative proficiencies, communication, and relevant keywords; prune out completely unrelated skills)
-- Reframes project and experience bullets through the lens of the target role (highlighting relevant aspects like UI/UX, visual design, asset creation, user experience, problem solving, collaboration, client communication, and organization)
+- Selects and formats the "skills" list based ONLY on what the candidate actually knows, did, or demonstrated in their resume that aligns with the target job role and description (e.g. UI/UX design, frontend layout, generative AI tools, responsive design, visual assets, client communication, problem-solving). Never invent random skills or software tools the candidate never mentioned or used.
+- Prunes out completely unrelated technical skills that do not serve the target job role
+- Reframes project and experience bullets truthfully through the lens of the target role (highlighting relevant aspects like UI/UX, visual design, asset creation, user experience, problem solving, collaboration, client communication, and organization)
 - Uses strong, quantifiable action verbs
 - Keeps every bullet concise and truthful to the original experience (never invent employers, companies, or dates)
 - Preserves the candidate's real contact details and education entries
