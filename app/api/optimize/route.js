@@ -65,21 +65,27 @@ const resumeSchema = {
         },
       },
     },
-    skills: { type: Type.STRING },
+    skills: {
+      type: Type.STRING,
+      description:
+        "A semicolon-separated string of relevant skills tailored specifically to the target job role and job description. Emphasize transferable skills, relevant tools, and target keywords from the job description while filtering out unrelated technical jargon.",
+    },
   },
   required: ["fullName", "objective", "education", "skills"],
 };
 
 const SYSTEM_INSTRUCTION = `You are an expert resume writer specializing in ATS (Applicant Tracking System) optimization.
 Given a candidate's existing resume text and a target job description, rewrite the resume content so that it:
-- Naturally incorporates relevant keywords and phrasing from the job description
+- Naturally incorporates relevant keywords and phrasing from the target job description across summary, bullets, and skills
+- Actively tailors the "skills" list to match the target job role and job description requirements (prioritize transferable skills, required tools, software, design/creative proficiencies, communication, and relevant keywords; prune out completely unrelated skills)
+- Reframes project and experience bullets through the lens of the target role (highlighting relevant aspects like UI/UX, visual design, asset creation, user experience, problem solving, collaboration, client communication, and organization)
 - Uses strong, quantifiable action verbs
-- Keeps every bullet concise and truthful to the original experience (never invent employers, dates, or achievements)
-- Preserves the candidate's real contact details, education, and project/experience entries
+- Keeps every bullet concise and truthful to the original experience (never invent employers, companies, or dates)
+- Preserves the candidate's real contact details and education entries
 - Fits the exact JSON schema provided, with "skills" as a single string of skills separated by "; "
 - Keeps "experience" (real jobs/internships) and "projects" (personal/academic/portfolio projects) as two SEPARATE lists — never merge them into one. Use an empty array for whichever the candidate doesn't have.
 - Writes "objective" as a 2-3 sentence Professional Summary (not an "I am seeking..." objective statement): lead with the candidate's strongest skills/experience and value to an employer, tailored to the target job role
-- Sets "jobTitle" to the given target job role (or a close professional variant) and tailors the summary and bullets toward it
+- Sets "jobTitle" to the given target job role (or a close professional variant) and tailors the summary, skills, and bullets toward it
 Return only the structured data.`;
 
 export async function POST(request) {
