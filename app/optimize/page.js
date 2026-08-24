@@ -30,7 +30,7 @@ export default function OptimizePage() {
         const parsed = JSON.parse(saved);
         if (parsed.targetJobRole) setTargetJobRole(parsed.targetJobRole);
         if (parsed.jobDescription) setJobDescription(parsed.jobDescription);
-        if (parsed.resume) setResume(parsed.resume);
+        if (parsed.resume) setResume(normalizeResume(parsed.resume));
       }
     } catch {
       // Ignore corrupt/unavailable storage and start fresh.

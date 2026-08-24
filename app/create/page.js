@@ -21,7 +21,7 @@ export default function CreatePage() {
       const saved = sessionStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.data) setData(parsed.data);
+        if (parsed.data) setData({ ...emptyResume(), ...parsed.data });
         if (parsed.started) setTemplate("blank");
       }
     } catch {

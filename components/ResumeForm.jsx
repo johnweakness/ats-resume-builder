@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { emptyEducation, emptyExperience } from "@/lib/defaultResume";
+import { emptyEducation, emptyExperience, emptyProject } from "@/lib/defaultResume";
 
 const inputClass =
   "w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600";
@@ -51,46 +51,46 @@ export default function ResumeForm({ data, onChange }) {
     onChange({ ...data, education: data.education.filter((e) => e.id !== id) });
   }
 
-  function updateExperience(id, field, value) {
+  function updateEntry(section, id, field, value) {
     onChange({
       ...data,
-      experience: data.experience.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
+      [section]: data[section].map((e) => (e.id === id ? { ...e, [field]: value } : e)),
     });
   }
 
-  function addExperience() {
-    onChange({ ...data, experience: [...data.experience, emptyExperience()] });
+  function addEntry(section, factory) {
+    onChange({ ...data, [section]: [...data[section], factory()] });
   }
 
-  function removeExperience(id) {
-    onChange({ ...data, experience: data.experience.filter((e) => e.id !== id) });
+  function removeEntry(section, id) {
+    onChange({ ...data, [section]: data[section].filter((e) => e.id !== id) });
   }
 
-  function updateBullet(expId, index, value) {
+  function updateEntryBullet(section, entryId, index, value) {
     onChange({
       ...data,
-      experience: data.experience.map((e) =>
-        e.id === expId
+      [section]: data[section].map((e) =>
+        e.id === entryId
           ? { ...e, bullets: e.bullets.map((b, i) => (i === index ? value : b)) }
           : e
       ),
     });
   }
 
-  function addBullet(expId) {
+  function addEntryBullet(section, entryId) {
     onChange({
       ...data,
-      experience: data.experience.map((e) =>
-        e.id === expId ? { ...e, bullets: [...e.bullets, ""] } : e
+      [section]: data[section].map((e) =>
+        e.id === entryId ? { ...e, bullets: [...e.bullets, ""] } : e
       ),
     });
   }
 
-  function removeBullet(expId, index) {
+  function removeEntryBullet(section, entryId, index) {
     onChange({
       ...data,
-      experience: data.experience.map((e) =>
-        e.id === expId ? { ...e, bullets: e.bullets.filter((_, i) => i !== index) } : e
+      [section]: data[section].map((e) =>
+        e.id === entryId ? { ...e, bullets: e.bullets.filter((_, i) => i !== index) } : e
       ),
     });
   }
@@ -235,46 +235,42 @@ export default function ResumeForm({ data, onChange }) {
         </div>
       </Card>
 
-      <Card title="Experience / Projects">
-        <Field label="Section title" className="mb-4 max-w-xs">
-          <input
-            className={inputClass}
-            value={data.experienceHeading}
-            onChange={(e) => set("experienceHeading", e.target.value)}
-            placeholder="PROJECTS"
-          />
-        </Field>
+      <Card title="Experience">
         <div className="space-y-5">
+          {data.experience.length === 0 ? (
+            <p className="text-xs text-slate-400">
+              No work experience added yet. If you don't have any, that's okay — add your
+              projects below instead.
+            </p>
+          ) : null}
           {data.experience.map((exp, idx) => (
             <div key={exp.id} className="rounded-lg border border-slate-200 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase text-slate-400">
                   Entry {idx + 1}
                 </span>
-                {data.experience.length > 1 ? (
-                  <RemoveButton onClick={() => removeExperience(exp.id)} />
-                ) : null}
+                <RemoveButton onClick={() => removeEntry("experience", exp.id)} />
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Title">
+                <Field label="Company">
                   <input
                     className={inputClass}
                     value={exp.title}
-                    onChange={(e) => updateExperience(exp.id, "title", e.target.value)}
+                    onChange={(e) => updateEntry("experience", exp.id, "title", e.target.value)}
                   />
                 </Field>
-                <Field label="Role">
+                <Field label="Job Title / Role">
                   <input
                     className={inputClass}
                     value={exp.role}
-                    onChange={(e) => updateExperience(exp.id, "role", e.target.value)}
+                    onChange={(e) => updateEntry("experience", exp.id, "role", e.target.value)}
                   />
                 </Field>
                 <Field label="Link (optional)">
                   <input
                     className={inputClass}
                     value={exp.link}
-                    onChange={(e) => updateExperience(exp.id, "link", e.target.value)}
+                    onChange={(e) => updateEntry("experience", exp.id, "link", e.target.value)}
                     placeholder="https://..."
                   />
                 </Field>
@@ -282,7 +278,7 @@ export default function ResumeForm({ data, onChange }) {
                   <input
                     className={inputClass}
                     value={exp.date}
-                    onChange={(e) => updateExperience(exp.id, "date", e.target.value)}
+                    onChange={(e) => updateEntry("experience", exp.id, "date", e.target.value)}
                     placeholder="August 2026"
                   />
                 </Field>
@@ -295,17 +291,17 @@ export default function ResumeForm({ data, onChange }) {
                       <textarea
                         className={`${inputClass} min-h-[44px]`}
                         value={bullet}
-                        onChange={(e) => updateBullet(exp.id, i, e.target.value)}
+                        onChange={(e) => updateEntryBullet("experience", exp.id, i, e.target.value)}
                       />
                       {exp.bullets.length > 1 ? (
-                        <RemoveButton onClick={() => removeBullet(exp.id, i)} />
+                        <RemoveButton onClick={() => removeEntryBullet("experience", exp.id, i)} />
                       ) : null}
                     </div>
                   ))}
                 </div>
                 <button
                   type="button"
-                  onClick={() => addBullet(exp.id)}
+                  onClick={() => addEntryBullet("experience", exp.id)}
                   className="mt-2 text-xs font-medium text-blue-700 hover:underline"
                 >
                   + Add bullet point
@@ -313,7 +309,87 @@ export default function ResumeForm({ data, onChange }) {
               </div>
             </div>
           ))}
-          <AddButton onClick={addExperience} label="Add entry" />
+          <AddButton
+            onClick={() => addEntry("experience", emptyExperience)}
+            label="Add work experience"
+          />
+        </div>
+      </Card>
+
+      <Card title="Projects">
+        <div className="space-y-5">
+          {data.projects.length === 0 ? (
+            <p className="text-xs text-slate-400">
+              No projects added yet. Great for school, personal, or portfolio projects.
+            </p>
+          ) : null}
+          {data.projects.map((proj, idx) => (
+            <div key={proj.id} className="rounded-lg border border-slate-200 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase text-slate-400">
+                  Entry {idx + 1}
+                </span>
+                <RemoveButton onClick={() => removeEntry("projects", proj.id)} />
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Project Title">
+                  <input
+                    className={inputClass}
+                    value={proj.title}
+                    onChange={(e) => updateEntry("projects", proj.id, "title", e.target.value)}
+                  />
+                </Field>
+                <Field label="Your Role">
+                  <input
+                    className={inputClass}
+                    value={proj.role}
+                    onChange={(e) => updateEntry("projects", proj.id, "role", e.target.value)}
+                  />
+                </Field>
+                <Field label="Link (optional)">
+                  <input
+                    className={inputClass}
+                    value={proj.link}
+                    onChange={(e) => updateEntry("projects", proj.id, "link", e.target.value)}
+                    placeholder="https://..."
+                  />
+                </Field>
+                <Field label="Date">
+                  <input
+                    className={inputClass}
+                    value={proj.date}
+                    onChange={(e) => updateEntry("projects", proj.id, "date", e.target.value)}
+                    placeholder="August 2026"
+                  />
+                </Field>
+              </div>
+              <div className="mt-3">
+                <span className={labelClass}>Bullet points</span>
+                <div className="space-y-2">
+                  {proj.bullets.map((bullet, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <textarea
+                        className={`${inputClass} min-h-[44px]`}
+                        value={bullet}
+                        onChange={(e) => updateEntryBullet("projects", proj.id, i, e.target.value)}
+                      />
+                      {proj.bullets.length > 1 ? (
+                        <RemoveButton onClick={() => removeEntryBullet("projects", proj.id, i)} />
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => addEntryBullet("projects", proj.id)}
+                  className="mt-2 text-xs font-medium text-blue-700 hover:underline"
+                >
+                  + Add bullet point
+                </button>
+              </div>
+            </div>
+          ))}
+          <AddButton onClick={() => addEntry("projects", emptyProject)} label="Add project" />
         </div>
       </Card>
 

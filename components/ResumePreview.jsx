@@ -12,8 +12,8 @@ export default function ResumePreview({ data }) {
     photo,
     objective,
     education = [],
-    experienceHeading = "PROJECTS",
     experience = [],
+    projects = [],
     skills,
   } = data;
 
@@ -70,7 +70,7 @@ export default function ResumePreview({ data }) {
       ) : null}
 
       {experience.some((e) => e.title) ? (
-        <Section heading={experienceHeading || "EXPERIENCE"}>
+        <Section heading="EXPERIENCE">
           <div className="space-y-4">
             {experience.map((exp) => (
               <div key={exp.id}>
@@ -85,6 +85,32 @@ export default function ResumePreview({ data }) {
                 {exp.bullets?.filter(Boolean).length ? (
                   <ul className="mt-1 list-disc space-y-1 pl-5">
                     {exp.bullets.filter(Boolean).map((bullet, i) => (
+                      <li key={i}>{bullet}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </Section>
+      ) : null}
+
+      {projects.some((p) => p.title) ? (
+        <Section heading="PROJECTS">
+          <div className="space-y-4">
+            {projects.map((proj) => (
+              <div key={proj.id}>
+                <div className="flex items-baseline justify-between font-semibold">
+                  <span>{proj.title}</span>
+                  <span className="whitespace-nowrap text-sm">{proj.date}</span>
+                </div>
+                <div className="flex items-baseline justify-between italic text-slate-600">
+                  <span>{proj.role}</span>
+                  <span className="whitespace-nowrap text-sm text-slate-500">{proj.link}</span>
+                </div>
+                {proj.bullets?.filter(Boolean).length ? (
+                  <ul className="mt-1 list-disc space-y-1 pl-5">
+                    {proj.bullets.filter(Boolean).map((bullet, i) => (
                       <li key={i}>{bullet}</li>
                     ))}
                   </ul>
