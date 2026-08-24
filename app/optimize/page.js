@@ -36,6 +36,15 @@ export default function OptimizePage() {
       // Ignore corrupt/unavailable storage and start fresh.
     }
     setHydrated(true);
+
+    // Clear saved session data when navigating away/unmounting so leaving resets it.
+    return () => {
+      try {
+        sessionStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // Ignore storage errors.
+      }
+    };
   }, []);
 
   useEffect(() => {
