@@ -14,8 +14,26 @@ export default function OptimizePage() {
   const [targetJobRole, setTargetJobRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [error, setError] = useState("");
   const [resume, setResume] = useState(null);
+
+  async function fetchWithTimeout(url, options, timeoutMs) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } catch (err) {
+      if (err.name === "AbortError") {
+        throw new Error(
+          "This is taking longer than usual, possibly due to a slow connection. Please try again."
+        );
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
 
   async function handleOptimize() {
     setError("");
@@ -34,22 +52,29 @@ export default function OptimizePage() {
     }
 
     setLoading(true);
+    setSlowNotice(false);
+    const slowTimer = setTimeout(() => setSlowNotice(true), 8000);
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      const parseRes = await fetch("/api/parse-resume", {
-        method: "POST",
-        body: formData,
-      });
+      const parseRes = await fetchWithTimeout(
+        "/api/parse-resume",
+        { method: "POST", body: formData },
+        30_000
+      );
       const parseData = await parseRes.json();
       if (!parseRes.ok) throw new Error(parseData.error || "Failed to read the resume file.");
 
-      const optimizeRes = await fetch("/api/optimize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeText: parseData.text, jobDescription, targetJobRole }),
-      });
+      const optimizeRes = await fetchWithTimeout(
+        "/api/optimize",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resumeText: parseData.text, jobDescription, targetJobRole }),
+        },
+        45_000
+      );
       const optimizeData = await optimizeRes.json();
       if (!optimizeRes.ok) throw new Error(optimizeData.error || "Failed to optimize the resume.");
 
@@ -59,6 +84,8 @@ export default function OptimizePage() {
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
+      clearTimeout(slowTimer);
+      setSlowNotice(false);
       setLoading(false);
     }
   }
@@ -111,6 +138,13 @@ export default function OptimizePage() {
             </div>
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+            {loading && slowNotice ? (
+              <p className="text-sm text-slate-500">
+                Still working — this can take a bit longer on a slower connection or with a longer
+                resume/job description. No need to refresh, just hang tight.
+              </p>
+            ) : null}
 
             <button
               type="button"
