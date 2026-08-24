@@ -1,44 +1,47 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 export const runtime = "nodejs";
 
+// gemini-2.5-flash: current stable, cost-efficient model (see ai.google.dev/gemini-api/docs/models)
+const MODEL = "gemini-2.5-flash";
+
 const resumeSchema = {
-  type: SchemaType.OBJECT,
+  type: Type.OBJECT,
   properties: {
-    fullName: { type: SchemaType.STRING },
-    jobTitle: { type: SchemaType.STRING },
-    location: { type: SchemaType.STRING },
-    phone: { type: SchemaType.STRING },
-    email: { type: SchemaType.STRING },
-    objective: { type: SchemaType.STRING },
+    fullName: { type: Type.STRING },
+    jobTitle: { type: Type.STRING },
+    location: { type: Type.STRING },
+    phone: { type: Type.STRING },
+    email: { type: Type.STRING },
+    objective: { type: Type.STRING },
     education: {
-      type: SchemaType.ARRAY,
+      type: Type.ARRAY,
       items: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
-          degree: { type: SchemaType.STRING },
-          school: { type: SchemaType.STRING },
-          location: { type: SchemaType.STRING },
-          startDate: { type: SchemaType.STRING },
-          endDate: { type: SchemaType.STRING },
+          degree: { type: Type.STRING },
+          school: { type: Type.STRING },
+          location: { type: Type.STRING },
+          startDate: { type: Type.STRING },
+          endDate: { type: Type.STRING },
         },
       },
     },
-    experienceHeading: { type: SchemaType.STRING },
+    experienceHeading: { type: Type.STRING },
     experience: {
-      type: SchemaType.ARRAY,
+      type: Type.ARRAY,
       items: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
-          title: { type: SchemaType.STRING },
-          role: { type: SchemaType.STRING },
-          link: { type: SchemaType.STRING },
-          date: { type: SchemaType.STRING },
-          bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+          title: { type: Type.STRING },
+          role: { type: Type.STRING },
+          link: { type: Type.STRING },
+          date: { type: Type.STRING },
+          bullets: { type: Type.ARRAY, items: { type: Type.STRING } },
         },
       },
     },
-    skills: { type: SchemaType.STRING },
+    skills: { type: Type.STRING },
   },
   required: ["fullName", "objective", "education", "experience", "skills"],
 };
@@ -72,20 +75,20 @@ export async function POST(request) {
       );
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: SYSTEM_INSTRUCTION,
-      generationConfig: {
+    const ai = new GoogleGenAI({ apiKey });
+
+    const prompt = `CANDIDATE RESUME:\n"""\n${resumeText}\n"""\n\nTARGET JOB DESCRIPTION:\n"""\n${jobDescription}\n"""\n\nRewrite and optimize the resume for this job description following the JSON schema.`;
+
+    const result = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: resumeSchema,
       },
     });
-
-    const prompt = `CANDIDATE RESUME:\n"""\n${resumeText}\n"""\n\nTARGET JOB DESCRIPTION:\n"""\n${jobDescription}\n"""\n\nRewrite and optimize the resume for this job description following the JSON schema.`;
-
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const responseText = result.text;
 
     let optimized;
     try {
