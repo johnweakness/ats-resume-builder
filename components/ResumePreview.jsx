@@ -280,14 +280,28 @@ function buildPages(data) {
   const maxHeight = 960;
 
   for (const section of sections) {
-    const height = estimateSectionHeight(section);
-    if (currentSections.length && currentHeight + height > maxHeight) {
-      pages.push({ meta: { fullName, jobTitle, contactLine, photo, photoNameAlign: photo ? "" : "", headerPaddingRight: photo ? "pr-24 sm:pr-28" : "" }, sections: currentSections });
-      currentSections = [];
-      currentHeight = estimateHeaderHeight({ fullName, jobTitle, photo, contactLine });
+    const chunks = chunkSection(section, maxHeight - currentHeight);
+
+    for (const chunk of chunks) {
+      const height = estimateSectionHeight(chunk);
+      if (currentSections.length && currentHeight + height > maxHeight) {
+        pages.push({
+          meta: {
+            fullName,
+            jobTitle,
+            contactLine,
+            photo,
+            photoNameAlign: photo ? "" : "",
+            headerPaddingRight: photo ? "pr-24 sm:pr-28" : "",
+          },
+          sections: currentSections,
+        });
+        currentSections = [];
+        currentHeight = estimateHeaderHeight({ fullName, jobTitle, photo, contactLine });
+      }
+      currentSections.push(chunk);
+      currentHeight += height;
     }
-    currentSections.push(section);
-    currentHeight += height;
   }
 
   if (!currentSections.length) {
@@ -295,7 +309,14 @@ function buildPages(data) {
   }
 
   pages.push({
-    meta: { fullName, jobTitle, contactLine, photo, photoNameAlign: photo ? "" : "", headerPaddingRight: photo ? "pr-24 sm:pr-28" : "" },
+    meta: {
+      fullName,
+      jobTitle,
+      contactLine,
+      photo,
+      photoNameAlign: photo ? "" : "",
+      headerPaddingRight: photo ? "pr-24 sm:pr-28" : "",
+    },
     sections: currentSections.length ? currentSections : [{ type: "empty", key: "empty" }],
   });
 
@@ -327,4 +348,35 @@ function estimateSectionHeight(section) {
     default:
       return 0;
   }
+}
+
+function chunkSection(section, remainingHeight) {
+  if (section.type !== "experience" && section.type !== "projects") {
+    return [section];
+  }
+
+  const chunks = [];
+  let current = [];
+  let currentHeight = estimateSectionHeight({ ...section, entries: [] });
+
+  for (const entry of section.entries) {
+    const entryHeight = estimateEntryHeight(entry);
+    if (current.length && currentHeight + entryHeight > remainingHeight && section.entries.length > 1) {
+      chunks.push({ ...section, entries: current });
+      current = [];
+      currentHeight = estimateSectionHeight({ ...section, entries: [] });
+    }
+    current.push(entry);
+    currentHeight += entryHeight;
+  }
+
+  if (current.length) {
+    chunks.push({ ...section, entries: current });
+  }
+
+  return chunks.length ? chunks : [section];
+}
+
+function estimateEntryHeight(entry) {
+  return 42 + (entry.bullets?.filter(Boolean).length || 0) * 18;
 }
