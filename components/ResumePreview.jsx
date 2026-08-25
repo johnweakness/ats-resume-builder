@@ -282,10 +282,10 @@ function paginateItems(items, heights) {
   const pages = [];
   let current = [];
   let currentHeight = 0;
-  const limit = PAGE_HEIGHT - headerHeight(items[0]?.meta);
+  const limit = PAGE_HEIGHT - headerHeight(items[0]?.meta) - 80;
 
   for (const item of items) {
-    const height = heights[item.key] || fallbackHeight(item);
+    const height = (heights[item.key] || fallbackHeight(item)) + itemGapHeight(item);
     if (current.length && currentHeight + height > limit) {
       pages.push({ meta: items[0].meta, items: current });
       current = [];
@@ -329,6 +329,22 @@ function fallbackHeight(item) {
       return 68;
     default:
       return 96;
+  }
+}
+
+function itemGapHeight(item) {
+  switch (item.type) {
+    case "objective":
+    case "education":
+    case "experience-start":
+    case "experience-entry":
+    case "skills":
+    case "certifications":
+    case "projects-start":
+    case "projects-entry":
+      return 16;
+    default:
+      return 12;
   }
 }
 
