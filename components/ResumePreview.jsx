@@ -178,7 +178,7 @@ function PageItem({ item }) {
   }
 
   if (item.type === "experience-entry") {
-    return renderEntry(item.entry);
+    return renderExperienceEntry(item.entry);
   }
 
   if (item.type === "skills") {
@@ -213,13 +213,13 @@ function PageItem({ item }) {
   }
 
   if (item.type === "projects-entry") {
-    return renderEntry(item.entry);
+    return renderProjectEntry(item.entry);
   }
 
   return null;
 }
 
-function renderEntry(entry) {
+function renderExperienceEntry(entry) {
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
@@ -230,6 +230,32 @@ function renderEntry(entry) {
         <span>{entry.role}</span>
         {entry.link ? (
           <a href={entry.link} target="_blank" rel="noreferrer" className="whitespace-nowrap not-italic text-blue-700 hover:underline">
+            {entry.link}
+          </a>
+        ) : null}
+      </div>
+      {entry.bullets?.filter(Boolean).length ? (
+        <ul className="mt-1.5 space-y-1 pl-4 list-disc text-xs leading-normal text-slate-700 sm:text-sm">
+          {entry.bullets.filter(Boolean).map((bullet, i) => (
+            <li key={i}>{bullet}</li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+function renderProjectEntry(entry) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
+        <span>{entry.title}</span>
+        <span className="whitespace-nowrap font-bold">{entry.date}</span>
+      </div>
+      <div className="flex flex-col gap-0.5 text-xs italic text-slate-600 sm:text-sm">
+        <span>{entry.role}</span>
+        {entry.link ? (
+          <a href={entry.link} target="_blank" rel="noreferrer" className="w-full break-all not-italic text-blue-700 hover:underline">
             {entry.link}
           </a>
         ) : null}
