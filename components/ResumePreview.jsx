@@ -28,6 +28,35 @@ export default function ResumePreview({ data }) {
     if (changed) setHeights(next);
   }, [items, heights]);
 
+  useLayoutEffect(() => {
+    if (typeof ResizeObserver === "undefined") return undefined;
+
+    const observer = new ResizeObserver(() => {
+      const next = {};
+      let changed = false;
+
+      for (const item of items) {
+        const node = measureRefs.current[item.key];
+        const height = node?.getBoundingClientRect().height || 0;
+        if (height && heights[item.key] !== height) {
+          next[item.key] = height;
+          changed = true;
+        } else if (heights[item.key]) {
+          next[item.key] = heights[item.key];
+        }
+      }
+
+      if (changed) setHeights(next);
+    });
+
+    for (const item of items) {
+      const node = measureRefs.current[item.key];
+      if (node) observer.observe(node);
+    }
+
+    return () => observer.disconnect();
+  }, [items, heights]);
+
   const pages = useMemo(() => paginateItems(items, heights), [items, heights]);
 
   return (
@@ -290,7 +319,7 @@ function paginateItems(items, heights) {
   const pages = [];
   let current = [];
   let currentHeight = 0;
-  const limit = PAGE_HEIGHT - headerHeight(items[0]?.meta) - 140;
+  const limit = PAGE_HEIGHT - headerHeight(items[0]?.meta) - 120;
 
   for (const item of items) {
     const height = (heights[item.key] || fallbackHeight(item)) + itemGapHeight(item);
