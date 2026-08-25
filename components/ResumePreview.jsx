@@ -7,6 +7,7 @@ const PAGE_WIDTH = 794;
 
 export default function ResumePreview({ data }) {
   const items = useMemo(() => buildItems(data), [data]);
+  const previewKey = useMemo(() => JSON.stringify(data), [data]);
   const [heights, setHeights] = useState({});
   const measureRefs = useRef({});
 
@@ -60,7 +61,7 @@ export default function ResumePreview({ data }) {
   const pages = useMemo(() => paginateItems(items, heights), [items, heights]);
 
   return (
-    <div className="mx-auto flex w-full max-w-[794px] flex-col gap-6">
+    <div key={previewKey} className="mx-auto flex w-full max-w-[794px] flex-col gap-6">
       <MeasurementLayer items={items} refsMap={measureRefs} />
 
       {pages.map((page, index) => (
