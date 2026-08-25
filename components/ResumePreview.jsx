@@ -13,6 +13,9 @@ export default function ResumePreview({ data }) {
     education = [],
     experience = [],
     projects = [],
+    certifications = [],
+    seminarsTrainings = [],
+    awardsAchievements = [],
     skills,
   } = data;
 
@@ -144,6 +147,10 @@ export default function ResumePreview({ data }) {
         </Section>
       ) : null}
 
+      <CredentialPreview heading="Certifications" entries={certifications} />
+      <CredentialPreview heading="Seminars & Trainings" entries={seminarsTrainings} />
+      <CredentialPreview heading="Awards & Achievements" entries={awardsAchievements} />
+
       {/* Skills */}
       {skills ? (
         <Section heading="Skills">
@@ -153,6 +160,24 @@ export default function ResumePreview({ data }) {
         </Section>
       ) : null}
     </div>
+  );
+}
+
+function CredentialPreview({ heading, entries }) {
+  const completeEntries = entries.filter((entry) => entry.title);
+  if (!completeEntries.length) return null;
+
+  return (
+    <Section heading={heading}>
+      <ul className="space-y-1 pl-4 list-disc text-xs sm:text-sm text-slate-700 leading-normal">
+        {completeEntries.map((entry) => (
+          <li key={entry.id}>
+            <span className="font-semibold">{entry.title}</span>
+            {[entry.organization, entry.date].filter(Boolean).length ? ` — ${[entry.organization, entry.date].filter(Boolean).join(", ")}` : ""}
+          </li>
+        ))}
+      </ul>
+    </Section>
   );
 }
 

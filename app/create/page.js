@@ -22,7 +22,7 @@ export default function CreatePage() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.data) setData({ ...emptyResume(), ...parsed.data });
-        if (parsed.started) setTemplate("blank");
+        if (parsed.started) setTemplate(parsed.templateId || "blank");
       }
     } catch {
       // Ignore corrupt/unavailable storage and start fresh.
@@ -35,7 +35,7 @@ export default function CreatePage() {
     try {
       sessionStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ started: template !== undefined, data })
+        JSON.stringify({ started: template !== undefined, templateId: template, data })
       );
     } catch {
       // Storage may be full or disabled; not critical to persist.
@@ -43,7 +43,7 @@ export default function CreatePage() {
   }, [template, data, hydrated]);
 
   function chooseTemplate(t) {
-    setTemplate(t ?? "blank");
+    setTemplate(t?.id ?? "blank");
     setData(t ? t.build() : emptyResume());
   }
 
@@ -108,7 +108,7 @@ export default function CreatePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <ResumeForm data={data} onChange={setData} />
+          <ResumeForm data={data} onChange={setData} showFreshGradSections={template === "fresh-grad"} />
           <div className="lg:sticky lg:top-8 lg:self-start">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Live Preview

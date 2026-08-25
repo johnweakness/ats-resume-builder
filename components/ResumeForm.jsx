@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { emptyEducation, emptyExperience, emptyProject } from "@/lib/defaultResume";
+import { emptyCredential, emptyEducation, emptyExperience, emptyProject } from "@/lib/defaultResume";
 
 const inputClass =
   "w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600";
@@ -9,7 +9,7 @@ const labelClass = "mb-1 block text-xs font-medium text-slate-600";
 
 const MAX_PHOTO_SIZE = 2 * 1024 * 1024; // 2MB
 
-export default function ResumeForm({ data, onChange }) {
+export default function ResumeForm({ data, onChange, showFreshGradSections = false }) {
   const [photoError, setPhotoError] = useState("");
 
   function set(field, value) {
@@ -402,6 +402,38 @@ export default function ResumeForm({ data, onChange }) {
         </div>
       </Card>
 
+      {showFreshGradSections ? (
+        <>
+          <CredentialSection
+            title="Certifications"
+            entries={data.certifications || []}
+            section="certifications"
+            addLabel="Add certification"
+            onAdd={() => addEntry("certifications", emptyCredential)}
+            onRemove={removeEntry}
+            onUpdate={updateEntry}
+          />
+          <CredentialSection
+            title="Seminars & Trainings"
+            entries={data.seminarsTrainings || []}
+            section="seminarsTrainings"
+            addLabel="Add seminar or training"
+            onAdd={() => addEntry("seminarsTrainings", emptyCredential)}
+            onRemove={removeEntry}
+            onUpdate={updateEntry}
+          />
+          <CredentialSection
+            title="Awards & Achievements"
+            entries={data.awardsAchievements || []}
+            section="awardsAchievements"
+            addLabel="Add award or achievement"
+            onAdd={() => addEntry("awardsAchievements", emptyCredential)}
+            onRemove={removeEntry}
+            onUpdate={updateEntry}
+          />
+        </>
+      ) : null}
+
       <Card title="Skills">
         <Field label="Separate skills with a semicolon ( ; )">
           <textarea
@@ -413,6 +445,35 @@ export default function ResumeForm({ data, onChange }) {
         </Field>
       </Card>
     </div>
+  );
+}
+
+function CredentialSection({ title, entries, section, addLabel, onAdd, onRemove, onUpdate }) {
+  return (
+    <Card title={title}>
+      <div className="space-y-5">
+        {entries.map((entry, idx) => (
+          <div key={entry.id} className="rounded-lg border border-slate-200 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase text-slate-400">Entry {idx + 1}</span>
+              <RemoveButton onClick={() => onRemove(section, entry.id)} />
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Title">
+                <input className={inputClass} value={entry.title} onChange={(e) => onUpdate(section, entry.id, "title", e.target.value)} />
+              </Field>
+              <Field label="Issuing Organization / Host">
+                <input className={inputClass} value={entry.organization} onChange={(e) => onUpdate(section, entry.id, "organization", e.target.value)} />
+              </Field>
+              <Field label="Date">
+                <input className={inputClass} value={entry.date} onChange={(e) => onUpdate(section, entry.id, "date", e.target.value)} placeholder="August 2026" />
+              </Field>
+            </div>
+          </div>
+        ))}
+        <AddButton onClick={onAdd} label={addLabel} />
+      </div>
+    </Card>
   );
 }
 
