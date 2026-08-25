@@ -277,7 +277,7 @@ function buildPages(data) {
   const pages = [];
   let currentSections = [];
   let currentHeight = estimateHeaderHeight({ fullName, jobTitle, photo, contactLine });
-  const maxHeight = 960;
+  const maxHeight = 820;
 
   for (const section of sections) {
     const chunks = chunkSection(section, maxHeight - currentHeight);
@@ -324,27 +324,27 @@ function buildPages(data) {
 }
 
 function estimateHeaderHeight({ fullName, jobTitle, contactLine, photo }) {
-  let height = photo ? 150 : 132;
-  if (fullName) height += 26;
-  if (jobTitle) height += 18;
-  if (contactLine) height += 28;
+  let height = photo ? 180 : 155;
+  if (fullName) height += 30;
+  if (jobTitle) height += 20;
+  if (contactLine) height += 32;
   return height;
 }
 
 function estimateSectionHeight(section) {
   switch (section.type) {
     case "objective":
-      return 90;
+      return 110;
     case "education":
-      return 58 + section.entries.length * 36;
+      return 70 + section.entries.length * 42;
     case "experience":
-      return 68 + section.entries.reduce((sum, entry) => sum + 42 + (entry.bullets?.filter(Boolean).length || 0) * 18, 0);
+      return 78 + section.entries.reduce((sum, entry) => sum + 54 + (entry.bullets?.filter(Boolean).length || 0) * 22, 0);
     case "skills":
-      return 64;
+      return 80;
     case "certifications":
-      return 58 + section.entries.length * 22;
+      return 70 + section.entries.length * 26;
     case "projects":
-      return 68 + section.entries.reduce((sum, entry) => sum + 42 + (entry.bullets?.filter(Boolean).length || 0) * 18, 0);
+      return 78 + section.entries.reduce((sum, entry) => sum + 54 + (entry.bullets?.filter(Boolean).length || 0) * 22, 0);
     default:
       return 0;
   }
@@ -357,14 +357,16 @@ function chunkSection(section, remainingHeight) {
 
   const chunks = [];
   let current = [];
-  let currentHeight = estimateSectionHeight({ ...section, entries: [] });
+  let currentHeight = section.type === "experience" || section.type === "projects" ? 36 : estimateSectionHeight({ ...section, entries: [] });
 
   for (const entry of section.entries) {
     const entryHeight = estimateEntryHeight(entry);
     if ((current.length && currentHeight + entryHeight > remainingHeight && section.entries.length > 1) || (!current.length && entryHeight > remainingHeight)) {
-      chunks.push({ ...section, entries: current });
+      if (current.length) {
+        chunks.push({ ...section, entries: current });
+      }
       current = [];
-      currentHeight = estimateSectionHeight({ ...section, entries: [] });
+      currentHeight = 36;
     }
     current.push(entry);
     currentHeight += entryHeight;
@@ -378,5 +380,5 @@ function chunkSection(section, remainingHeight) {
 }
 
 function estimateEntryHeight(entry) {
-  return 42 + (entry.bullets?.filter(Boolean).length || 0) * 18;
+  return 54 + (entry.bullets?.filter(Boolean).length || 0) * 22;
 }
