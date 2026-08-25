@@ -4,11 +4,11 @@ import { useState } from "react";
 import Spinner from "./Spinner";
 import { getMissingResumeFields } from "@/lib/defaultResume";
 
-export default function DownloadButton({ data, className = "" }) {
+export default function DownloadButton({ data, className = "", requireExperienceAndProjects = true }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const missingFields = getMissingResumeFields(data);
+  const missingFields = getMissingResumeFields(data, { requireExperienceAndProjects });
   const isIncomplete = missingFields.length > 0;
 
   async function handleDownload() {

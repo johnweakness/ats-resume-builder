@@ -104,7 +104,7 @@ export default function CreatePage() {
               &larr; Choose a different template
             </button>
           </div>
-          <DownloadButton data={data} />
+          <DownloadButton data={data} requireExperienceAndProjects={template !== "fresh-grad"} />
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
