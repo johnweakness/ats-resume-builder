@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 const PAGE_HEIGHT = 1122;
 const PAGE_WIDTH = 794;
@@ -10,7 +10,7 @@ export default function ResumePreview({ data }) {
   const [heights, setHeights] = useState({});
   const measureRefs = useRef({});
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const next = {};
     let changed = false;
 
@@ -87,13 +87,14 @@ function MeasurementLayer({ items, refsMap }) {
   return (
     <div className="pointer-events-none absolute left-[-10000px] top-0 w-[794px] overflow-hidden" aria-hidden="true">
       <div style={{ width: `${PAGE_WIDTH}px` }}>
-        <div className="p-8 sm:p-12">
+        <div className="flex flex-col p-8 text-slate-800 sm:p-12">
           {items.map((item) => (
             <div
               key={item.key}
               ref={(node) => {
                 if (node) refsMap.current[item.key] = node;
               }}
+              className="w-full"
             >
               <PageItem item={item} />
             </div>
@@ -303,31 +304,31 @@ function paginateItems(items, heights) {
 
 function headerHeight(meta) {
   if (!meta) return 0;
-  let height = meta.photo ? 180 : 155;
-  if (meta.fullName) height += 30;
-  if (meta.jobTitle) height += 20;
-  if (meta.contactLine) height += 32;
+  let height = meta.photo ? 184 : 158;
+  if (meta.fullName) height += 28;
+  if (meta.jobTitle) height += 18;
+  if (meta.contactLine) height += 34;
   return height;
 }
 
 function fallbackHeight(item) {
   switch (item.type) {
     case "objective":
-      return 110;
+      return 104;
     case "education":
-      return 120;
+      return 116;
     case "experience-start":
     case "projects-start":
-      return 42;
+      return 40;
     case "experience-entry":
     case "projects-entry":
-      return 120;
+      return 116;
     case "skills":
-      return 80;
+      return 76;
     case "certifications":
-      return 70;
+      return 68;
     default:
-      return 100;
+      return 96;
   }
 }
 
