@@ -18,11 +18,10 @@ export default function OptimizePage() {
   const [loading, setLoading] = useState(false);
   const [slowNotice, setSlowNotice] = useState(false);
   const [error, setError] = useState("");
+  const [errorKind, setErrorKind] = useState("");
   const [resume, setResume] = useState(null);
   const [hydrated, setHydrated] = useState(false);
 
-  // Restore in-progress work so a refresh doesn't wipe out the user's form.
-  // Note: the uploaded file itself can't be persisted, so it must be re-selected.
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
@@ -37,7 +36,6 @@ export default function OptimizePage() {
     }
     setHydrated(true);
 
-    // Clear saved session data when navigating away/unmounting so leaving resets it.
     return () => {
       try {
         sessionStorage.removeItem(STORAGE_KEY);
@@ -50,10 +48,7 @@ export default function OptimizePage() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      sessionStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ targetJobRole, jobDescription, resume })
-      );
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ targetJobRole, jobDescription, resume }));
     } catch {
       // Storage may be full or disabled; not critical to persist.
     }
@@ -66,9 +61,7 @@ export default function OptimizePage() {
       return await fetch(url, { ...options, signal: controller.signal });
     } catch (err) {
       if (err.name === "AbortError") {
-        throw new Error(
-          "This is taking longer than usual, possibly due to a slow connection. Please try again."
-        );
+        throw new Error("This is taking longer than usual, possibly due to a slow connection. Please try again.");
       }
       throw err;
     } finally {
@@ -78,6 +71,7 @@ export default function OptimizePage() {
 
   async function handleOptimize() {
     setError("");
+    setErrorKind("");
 
     if (!file) {
       setError("Please upload your current resume file.");
@@ -99,11 +93,7 @@ export default function OptimizePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const parseRes = await fetchWithTimeout(
-        "/api/parse-resume",
-        { method: "POST", body: formData },
-        30_000
-      );
+      const parseRes = await fetchWithTimeout("/api/parse-resume", { method: "POST", body: formData }, 30_000);
       const parseData = await parseRes.json();
       if (!parseRes.ok) throw new Error(parseData.error || "Failed to read the resume file.");
 
@@ -117,12 +107,24 @@ export default function OptimizePage() {
         45_000
       );
       const optimizeData = await optimizeRes.json();
-      if (!optimizeRes.ok) throw new Error(optimizeData.error || "Failed to optimize the resume.");
+      if (!optimizeRes.ok) {
+        const message = optimizeData.error || "Failed to optimize the resume.";
+        const isQuota =
+          optimizeRes.status === 429 ||
+          optimizeData.code === "AI_QUOTA_LIMIT" ||
+          /limit|quota|rate limit|too many requests/i.test(message);
+        setErrorKind(isQuota ? "quota" : "generic");
+        throw new Error(message);
+      }
 
       const normalized = normalizeResume(optimizeData.resume);
       if (parseData.photo) normalized.photo = parseData.photo;
       setResume(normalized);
     } catch (err) {
+      const message = `${err.message || ""}`;
+      if (/limit|quota|rate limit|too many requests/i.test(message)) {
+        setErrorKind("quota");
+      }
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
       clearTimeout(slowTimer);
@@ -147,16 +149,12 @@ export default function OptimizePage() {
         {!resume ? (
           <div className="mx-auto max-w-2xl space-y-6">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Your current resume
-              </label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">Your current resume</label>
               <FileDropzone file={file} onFileSelected={setFile} />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Target job role
-              </label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">Target job role</label>
               <input
                 type="text"
                 value={targetJobRole}
@@ -167,9 +165,7 @@ export default function OptimizePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Target job description
-              </label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">Target job description</label>
               <textarea
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
@@ -179,21 +175,25 @@ export default function OptimizePage() {
             </div>
 
             {error ? (
-              <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+              <div
+                className={`flex items-start gap-3 rounded-lg p-4 ${
+                  errorKind === "quota" ? "border border-amber-200 bg-amber-50" : "border border-red-200 bg-red-50"
+                }`}
+              >
                 <span className="text-xl leading-none">⚠️</span>
                 <div>
-                  <p className="text-sm font-semibold text-red-700">
-                    We couldn't process your file
+                  <p className={`text-sm font-semibold ${errorKind === "quota" ? "text-amber-800" : "text-red-700"}`}>
+                    {errorKind === "quota" ? "Google AI Studio limit reached" : "We couldn't process your file"}
                   </p>
-                  <p className="mt-1 text-sm text-red-600">{error}</p>
+                  <p className={`mt-1 text-sm ${errorKind === "quota" ? "text-amber-700" : "text-red-600"}`}>{error}</p>
                 </div>
               </div>
             ) : null}
 
             {loading && slowNotice ? (
               <p className="text-sm text-slate-500">
-                Still working — this can take a bit longer on a slower connection or with a longer
-                resume/job description. No need to refresh, just hang tight.
+                Still working — this can take a bit longer on a slower connection or with a longer resume/job
+                description. No need to refresh, just hang tight.
               </p>
             ) : null}
 
@@ -211,9 +211,7 @@ export default function OptimizePage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <ResumeForm data={resume} onChange={setResume} showAdditionalSections />
             <div className="lg:sticky lg:top-8 lg:self-start">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Live Preview
-              </p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Live Preview</p>
               <div className="overflow-auto rounded-xl border border-slate-200 bg-slate-100 p-4">
                 <ResumePreview data={resume} />
               </div>

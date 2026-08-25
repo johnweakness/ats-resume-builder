@@ -160,9 +160,22 @@ export async function POST(request) {
     }
 
     if (lastError) {
+      const errorText = `${lastError?.message || lastError || ""}`.toLowerCase();
+      const isQuotaError =
+        errorText.includes("quota") ||
+        errorText.includes("resource_exhausted") ||
+        errorText.includes("rate limit") ||
+        errorText.includes("429") ||
+        errorText.includes("too many requests");
+
       return Response.json(
-        { error: "The AI is having trouble right now. Please try again in a moment." },
-        { status: 502 }
+        {
+          error: isQuotaError
+            ? "Google AI Studio limit reached. Please try again later."
+            : "The AI is having trouble right now. Please try again in a moment.",
+          code: isQuotaError ? "AI_QUOTA_LIMIT" : "AI_UNAVAILABLE",
+        },
+        { status: isQuotaError ? 429 : 502 }
       );
     }
 
