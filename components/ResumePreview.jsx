@@ -6,7 +6,7 @@ const PAGE_HEIGHT = 1122;
 const PAGE_WIDTH = 794;
 
 export default function ResumePreview({ data }) {
-  const items = useMemo(() => buildItems(data), [data]);
+  const { meta, items } = useMemo(() => buildItems(data), [data]);
   const previewKey = useMemo(() => JSON.stringify(data), [data]);
   const [heights, setHeights] = useState({});
   const measureRefs = useRef({});
@@ -58,7 +58,7 @@ export default function ResumePreview({ data }) {
     return () => observer.disconnect();
   }, [items, heights]);
 
-  const pages = useMemo(() => paginateItems(items, heights), [items, heights]);
+  const pages = useMemo(() => paginateItems(items, meta, heights), [items, meta, heights]);
 
   return (
     <div key={previewKey} className="mx-auto flex w-full max-w-[794px] flex-col gap-6">
@@ -276,6 +276,14 @@ function buildItems(data) {
   } = data;
 
   const contactLine = [location, phone, email, linkedin, portfolio].filter(Boolean).join("   |   ");
+  const meta = {
+    fullName,
+    jobTitle,
+    contactLine,
+    photo,
+    photoNameAlign: photo ? "" : "",
+    headerPaddingRight: photo ? "pr-24 sm:pr-28" : "",
+  };
   const items = [];
 
   if (objective?.trim()) {
@@ -313,19 +321,19 @@ function buildItems(data) {
     });
   }
 
-  return items.map((item) => ({ ...item, meta: { fullName, jobTitle, contactLine, photo, photoNameAlign: photo ? "" : "", headerPaddingRight: photo ? "pr-24 sm:pr-28" : "" } }));
+  return { meta, items };
 }
 
-function paginateItems(items, heights) {
+function paginateItems(items, meta, heights) {
   const pages = [];
   let current = [];
   let currentHeight = 0;
-  const limit = PAGE_HEIGHT - headerHeight(items[0]?.meta) - 120;
+  const limit = PAGE_HEIGHT - headerHeight(meta) - 120;
 
   for (const item of items) {
     const height = (heights[item.key] || fallbackHeight(item)) + itemGapHeight(item);
     if (current.length && currentHeight + height > limit) {
-      pages.push({ meta: items[0].meta, items: current });
+      pages.push({ meta, items: current });
       current = [];
       currentHeight = 0;
     }
@@ -334,7 +342,7 @@ function paginateItems(items, heights) {
   }
 
   if (current.length || !pages.length) {
-    pages.push({ meta: items[0]?.meta || emptyMeta(), items: current.length ? current : [{ type: "empty", key: "empty" }] });
+    pages.push({ meta, items: current.length ? current : [{ type: "empty", key: "empty" }] });
   }
 
   return pages;
