@@ -25,7 +25,7 @@ export default function ResumePreview({ data }) {
   return (
     <div className="w-full max-w-[794px] mx-auto rounded-sm bg-white p-8 sm:p-12 shadow-md ring-1 ring-slate-900/5 text-slate-800">
       {/* Header */}
-      <header className={`relative text-center ${photo ? "pr-24 sm:pr-28" : ""}`}>
+      <header className={`relative ${photo ? "pr-24 text-left sm:pr-28" : "text-center"}`}>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-wide text-blue-900 uppercase">
             {fullName || "YOUR NAME"}
@@ -34,7 +34,7 @@ export default function ResumePreview({ data }) {
             <p className="mt-1 text-sm sm:text-base font-normal text-slate-700">{jobTitle}</p>
           ) : null}
           {contactLine ? (
-            <p className="mt-5 border-y border-slate-600 py-3 text-xs sm:text-sm text-slate-600">{contactLine}</p>
+            <p className={photo ? "mt-1 border-b border-blue-700 pb-3 text-xs sm:text-sm text-slate-700" : "mt-5 border-y border-slate-600 py-3 text-xs sm:text-sm text-slate-600"}>{contactLine}</p>
           ) : null}
         </div>
         {photo ? (
@@ -42,7 +42,7 @@ export default function ResumePreview({ data }) {
           <img
             src={photo}
             alt=""
-            className="absolute right-0 top-0 h-20 w-20 sm:h-24 sm:w-24 rounded object-cover"
+            className="absolute right-0 top-0 h-24 w-24 sm:h-28 sm:w-28 object-cover"
           />
         ) : null}
       </header>
