@@ -280,7 +280,7 @@ export default function ResumeForm({ data, onChange, showAdditionalSections = fa
                 <span className="text-xs font-semibold uppercase text-slate-400">
                   Entry {idx + 1}
                 </span>
-                <RemoveButton onClick={() => removeEntry("experience", exp.id)} />
+                {noExperience ? <RemoveButton onClick={() => removeEntry("experience", exp.id)} /> : null}
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Company">
