@@ -284,7 +284,7 @@ function buildPages(data) {
 
     for (const chunk of chunks) {
       const height = estimateSectionHeight(chunk);
-      if (currentSections.length && currentHeight + height > maxHeight) {
+      if ((currentSections.length && currentHeight + height > maxHeight) || (!currentSections.length && height > maxHeight)) {
         pages.push({
           meta: {
             fullName,
@@ -361,7 +361,7 @@ function chunkSection(section, remainingHeight) {
 
   for (const entry of section.entries) {
     const entryHeight = estimateEntryHeight(entry);
-    if (current.length && currentHeight + entryHeight > remainingHeight && section.entries.length > 1) {
+    if ((current.length && currentHeight + entryHeight > remainingHeight && section.entries.length > 1) || (!current.length && entryHeight > remainingHeight)) {
       chunks.push({ ...section, entries: current });
       current = [];
       currentHeight = estimateSectionHeight({ ...section, entries: [] });
