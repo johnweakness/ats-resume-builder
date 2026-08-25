@@ -1,20 +1,41 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-// A4-style preview that keeps each page at a fixed size and stacks overflow on page 2+
+const PAGE_HEIGHT = 1122;
+const PAGE_WIDTH = 794;
+
 export default function ResumePreview({ data }) {
-  const pages = useMemo(() => buildPages(data), [data]);
+  const items = useMemo(() => buildItems(data), [data]);
+  const [heights, setHeights] = useState({});
+  const measureRefs = useRef({});
+
+  useEffect(() => {
+    const next = {};
+    let changed = false;
+
+    for (const item of items) {
+      const node = measureRefs.current[item.key];
+      const height = node?.getBoundingClientRect().height || 0;
+      if (height && heights[item.key] !== height) {
+        next[item.key] = height;
+        changed = true;
+      } else if (heights[item.key]) {
+        next[item.key] = heights[item.key];
+      }
+    }
+
+    if (changed) setHeights(next);
+  }, [items, heights]);
+
+  const pages = useMemo(() => paginateItems(items, heights), [items, heights]);
 
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-6">
+      <MeasurementLayer items={items} refsMap={measureRefs} />
+
       {pages.map((page, index) => (
-        <ResumePage
-          key={index}
-          page={page}
-          pageNumber={index + 1}
-          totalPages={pages.length}
-        />
+        <ResumePage key={index} page={page} pageNumber={index + 1} totalPages={pages.length} />
       ))}
     </div>
   );
@@ -25,46 +46,30 @@ function ResumePage({ page, pageNumber, totalPages }) {
 
   return (
     <section className="relative w-full overflow-hidden rounded-sm bg-white shadow-md ring-1 ring-slate-900/5">
-      <div className="aspect-[210/297] w-full">
+      <div style={{ aspectRatio: "210 / 297", width: "100%" }}>
         <div className="flex h-full flex-col p-8 text-slate-800 sm:p-12">
           <header className={`relative ${headerPaddingRight} ${photo ? "text-left" : "text-center"}`}>
             <div>
-              <h1
-                className={`text-2xl font-bold tracking-wide text-blue-900 uppercase sm:text-3xl ${photoNameAlign}`}
-              >
+              <h1 className={`text-2xl font-bold tracking-wide text-blue-900 uppercase sm:text-3xl ${photoNameAlign}`}>
                 {fullName || "YOUR NAME"}
               </h1>
-              {jobTitle ? (
-                <p className={`mt-1 text-sm font-normal text-slate-700 sm:text-base ${photoNameAlign}`}>
-                  {jobTitle}
-                </p>
-              ) : null}
+              {jobTitle ? <p className={`mt-1 text-sm font-normal text-slate-700 sm:text-base ${photoNameAlign}`}>{jobTitle}</p> : null}
               {contactLine ? (
-                <p
-                  className={
-                    photo
-                      ? "mt-1 border-b border-blue-700 pb-3 text-xs text-slate-700 sm:text-sm"
-                      : "mt-5 border-y border-slate-600 py-3 text-xs text-slate-600 sm:text-sm"
-                  }
-                >
+                <p className={photo ? "mt-1 border-b border-blue-700 pb-3 text-xs text-slate-700 sm:text-sm" : "mt-5 border-y border-slate-600 py-3 text-xs text-slate-600 sm:text-sm"}>
                   {contactLine}
                 </p>
               ) : null}
             </div>
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={photo}
-                alt=""
-                className="absolute right-0 top-0 h-24 w-24 object-cover sm:h-28 sm:w-28"
-              />
+              <img src={photo} alt="" className="absolute right-0 top-0 h-24 w-24 object-cover sm:h-28 sm:w-28" />
             ) : null}
           </header>
 
           <div className="mt-4 min-h-0 flex-1 overflow-hidden">
             <div className="space-y-4 sm:space-y-5">
-              {page.sections.map((section) => (
-                <Fragment key={section.key}>{renderSection(section)}</Fragment>
+              {page.items.map((item) => (
+                <PageItem key={item.key} item={item} />
               ))}
             </div>
           </div>
@@ -78,20 +83,41 @@ function ResumePage({ page, pageNumber, totalPages }) {
   );
 }
 
-function renderSection(section) {
-  if (section.type === "objective") {
+function MeasurementLayer({ items, refsMap }) {
+  return (
+    <div className="pointer-events-none absolute left-[-10000px] top-0 w-[794px] overflow-hidden" aria-hidden="true">
+      <div style={{ width: `${PAGE_WIDTH}px` }}>
+        <div className="p-8 sm:p-12">
+          {items.map((item) => (
+            <div
+              key={item.key}
+              ref={(node) => {
+                if (node) refsMap.current[item.key] = node;
+              }}
+            >
+              <PageItem item={item} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PageItem({ item }) {
+  if (item.type === "objective") {
     return (
-      <Section heading={section.heading}>
-        <p className="text-xs leading-relaxed text-slate-700 sm:text-sm">{section.value}</p>
+      <Section heading={item.heading}>
+        <p className="text-xs leading-relaxed text-slate-700 sm:text-sm">{item.value}</p>
       </Section>
     );
   }
 
-  if (section.type === "education") {
+  if (item.type === "education") {
     return (
       <Section heading="Education">
         <div className="space-y-3">
-          {section.entries.map((edu) => (
+          {item.entries.map((edu) => (
             <div key={edu.id}>
               <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
                 <span>{edu.degree}</span>
@@ -108,164 +134,75 @@ function renderSection(section) {
     );
   }
 
-  if (section.type === "experience") {
-    return (
-      <Section heading={section.heading}>
-        <div className="space-y-4">
-          {section.entries.map((exp) => (
-            <div key={exp.id}>
-              <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
-                <span>{exp.title}</span>
-                <span className="whitespace-nowrap font-bold">{exp.date}</span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 text-xs italic text-slate-600 sm:text-sm">
-                <span>{exp.role}</span>
-                {exp.link ? (
-                  <a href={exp.link} target="_blank" rel="noreferrer" className="whitespace-nowrap not-italic text-blue-700 hover:underline">
-                    {exp.link}
-                  </a>
-                ) : null}
-              </div>
-              {exp.bullets?.filter(Boolean).length ? (
-                <ul className="mt-1.5 space-y-1 pl-4 list-disc text-xs leading-normal text-slate-700 sm:text-sm">
-                  {exp.bullets.filter(Boolean).map((bullet, i) => (
-                    <li key={i}>{bullet}</li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      </Section>
-    );
+  if (item.type === "experience-start") {
+    return <Section heading={item.heading} />;
   }
 
-  if (section.type === "experience-start") {
-    return <Section heading={section.heading} />;
+  if (item.type === "experience-entry") {
+    return renderEntry(item.entry);
   }
 
-  if (section.type === "experience-entry") {
-    const exp = section.entry;
-    return (
-      <div className="space-y-1">
-        <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
-          <span>{exp.title}</span>
-          <span className="whitespace-nowrap font-bold">{exp.date}</span>
-        </div>
-        <div className="flex items-baseline justify-between gap-2 text-xs italic text-slate-600 sm:text-sm">
-          <span>{exp.role}</span>
-          {exp.link ? (
-            <a href={exp.link} target="_blank" rel="noreferrer" className="whitespace-nowrap not-italic text-blue-700 hover:underline">
-              {exp.link}
-            </a>
-          ) : null}
-        </div>
-        {exp.bullets?.filter(Boolean).length ? (
-          <ul className="mt-1.5 space-y-1 pl-4 list-disc text-xs leading-normal text-slate-700 sm:text-sm">
-            {exp.bullets.filter(Boolean).map((bullet, i) => (
-              <li key={i}>{bullet}</li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
-    );
-  }
-
-  if (section.type === "skills") {
+  if (item.type === "skills") {
     return (
       <Section heading="Skills">
         <ul className="list-disc pl-4 text-xs leading-normal text-slate-700 sm:text-sm">
-          <li>{section.value}</li>
+          <li>{item.value}</li>
         </ul>
       </Section>
     );
   }
 
-  if (section.type === "certifications") {
-    return <CredentialPreview heading="Certifications" entries={section.entries} />;
-  }
-
-  if (section.type === "projects") {
+  if (item.type === "certifications") {
+    const completeEntries = item.entries.filter((entry) => entry.title);
+    if (!completeEntries.length) return null;
     return (
-      <Section heading="Projects">
-        <div className="space-y-4">
-          {section.entries.map((proj) => (
-            <div key={proj.id}>
-              <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
-                <span>{proj.title}</span>
-                <span className="whitespace-nowrap font-bold">{proj.date}</span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 text-xs italic text-slate-600 sm:text-sm">
-                <span>{proj.role}</span>
-                {proj.link ? (
-                  <a href={proj.link} target="_blank" rel="noreferrer" className="whitespace-nowrap not-italic text-blue-700 hover:underline">
-                    {proj.link}
-                  </a>
-                ) : null}
-              </div>
-              {proj.bullets?.filter(Boolean).length ? (
-                <ul className="mt-1.5 space-y-1 pl-4 list-disc text-xs leading-normal text-slate-700 sm:text-sm">
-                  {proj.bullets.filter(Boolean).map((bullet, i) => (
-                    <li key={i}>{bullet}</li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
+      <Section heading="Certifications">
+        <ul className="list-disc space-y-1 pl-4 text-xs leading-normal text-slate-700 sm:text-sm">
+          {completeEntries.map((entry) => (
+            <li key={entry.id}>
+              <span className="font-semibold">{entry.title}</span>
+              {[entry.organization, entry.date].filter(Boolean).length ? ` - ${[entry.organization, entry.date].filter(Boolean).join(", ")}` : ""}
+            </li>
           ))}
-        </div>
+        </ul>
       </Section>
     );
   }
 
-  if (section.type === "projects-start") {
+  if (item.type === "projects-start") {
     return <Section heading="Projects" />;
   }
 
-  if (section.type === "projects-entry") {
-    const proj = section.entry;
-    return (
-      <div className="space-y-1">
-        <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
-          <span>{proj.title}</span>
-          <span className="whitespace-nowrap font-bold">{proj.date}</span>
-        </div>
-        <div className="flex items-baseline justify-between gap-2 text-xs italic text-slate-600 sm:text-sm">
-          <span>{proj.role}</span>
-          {proj.link ? (
-            <a href={proj.link} target="_blank" rel="noreferrer" className="whitespace-nowrap not-italic text-blue-700 hover:underline">
-              {proj.link}
-            </a>
-          ) : null}
-        </div>
-        {proj.bullets?.filter(Boolean).length ? (
-          <ul className="mt-1.5 space-y-1 pl-4 list-disc text-xs leading-normal text-slate-700 sm:text-sm">
-            {proj.bullets.filter(Boolean).map((bullet, i) => (
-              <li key={i}>{bullet}</li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
-    );
+  if (item.type === "projects-entry") {
+    return renderEntry(item.entry);
   }
 
   return null;
 }
 
-function CredentialPreview({ heading, entries }) {
-  const completeEntries = entries.filter((entry) => entry.title);
-  if (!completeEntries.length) return null;
-
+function renderEntry(entry) {
   return (
-    <Section heading={heading}>
-      <ul className="list-disc space-y-1 pl-4 text-xs leading-normal text-slate-700 sm:text-sm">
-        {completeEntries.map((entry) => (
-          <li key={entry.id}>
-            <span className="font-semibold">{entry.title}</span>
-            {[entry.organization, entry.date].filter(Boolean).length ? ` - ${[entry.organization, entry.date].filter(Boolean).join(", ")}` : ""}
-          </li>
-        ))}
-      </ul>
-    </Section>
+    <div className="space-y-1">
+      <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
+        <span>{entry.title}</span>
+        <span className="whitespace-nowrap font-bold">{entry.date}</span>
+      </div>
+      <div className="flex items-baseline justify-between gap-2 text-xs italic text-slate-600 sm:text-sm">
+        <span>{entry.role}</span>
+        {entry.link ? (
+          <a href={entry.link} target="_blank" rel="noreferrer" className="whitespace-nowrap not-italic text-blue-700 hover:underline">
+            {entry.link}
+          </a>
+        ) : null}
+      </div>
+      {entry.bullets?.filter(Boolean).length ? (
+        <ul className="mt-1.5 space-y-1 pl-4 list-disc text-xs leading-normal text-slate-700 sm:text-sm">
+          {entry.bullets.filter(Boolean).map((bullet, i) => (
+            <li key={i}>{bullet}</li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }
 
@@ -280,7 +217,7 @@ function Section({ heading, children }) {
   );
 }
 
-function buildPages(data) {
+function buildItems(data) {
   const {
     resumeType,
     fullName,
@@ -300,10 +237,10 @@ function buildPages(data) {
   } = data;
 
   const contactLine = [location, phone, email, linkedin, portfolio].filter(Boolean).join("   |   ");
-  const sections = [];
+  const items = [];
 
   if (objective?.trim()) {
-    sections.push({
+    items.push({
       type: "objective",
       key: "objective",
       heading: resumeType === "no-experience" ? "Objective" : "Professional Summary",
@@ -312,141 +249,95 @@ function buildPages(data) {
   }
 
   if (education.some((e) => e.degree || e.school)) {
-    sections.push({ type: "education", key: "education", entries: education.filter((e) => e.degree || e.school) });
+    items.push({ type: "education", key: "education", entries: education.filter((e) => e.degree || e.school) });
   }
 
   if (experience.some((e) => e.title)) {
-    sections.push({
-      type: "experience",
-      key: "experience",
-      heading: resumeType === "no-experience" ? "Internship" : "Experience",
-      entries: experience.filter((e) => e.title),
+    items.push({ type: "experience-start", key: "experience-start", heading: resumeType === "no-experience" ? "Internship" : "Experience" });
+    experience.filter((e) => e.title).forEach((entry) => {
+      items.push({ type: "experience-entry", key: `experience-${entry.id}`, entry });
     });
   }
 
   if (skills?.trim()) {
-    sections.push({ type: "skills", key: "skills", value: skills });
+    items.push({ type: "skills", key: "skills", value: skills });
   }
 
   if (certifications.some((c) => c.title)) {
-    sections.push({ type: "certifications", key: "certifications", entries: certifications.filter((c) => c.title) });
+    items.push({ type: "certifications", key: "certifications", entries: certifications.filter((c) => c.title) });
   }
 
   if (projects.some((p) => p.title)) {
-    sections.push({ type: "projects", key: "projects", entries: projects.filter((p) => p.title) });
+    items.push({ type: "projects-start", key: "projects-start" });
+    projects.filter((p) => p.title).forEach((entry) => {
+      items.push({ type: "projects-entry", key: `projects-${entry.id}`, entry });
+    });
   }
 
-  const pageMeta = {
-    fullName,
-    jobTitle,
-    contactLine,
-    photo,
-    photoNameAlign: photo ? "" : "",
-    headerPaddingRight: photo ? "pr-24 sm:pr-28" : "",
-  };
-  const pageBodyLimit = 820 - estimateHeaderHeight({ fullName, jobTitle, contactLine, photo });
-  const items = flattenItems(sections);
-  const pages = [];
-  let currentItems = [];
-  let currentHeight = 0;
+  return items.map((item) => ({ ...item, meta: { fullName, jobTitle, contactLine, photo, photoNameAlign: photo ? "" : "", headerPaddingRight: photo ? "pr-24 sm:pr-28" : "" } }));
+}
 
-  const flushPage = () => {
-    pages.push({
-      meta: pageMeta,
-      sections: currentItems.length ? currentItems : [{ type: "empty", key: `empty-${pages.length}` }],
-    });
-    currentItems = [];
-    currentHeight = 0;
-  };
+function paginateItems(items, heights) {
+  const pages = [];
+  let current = [];
+  let currentHeight = 0;
+  const limit = PAGE_HEIGHT - headerHeight(items[0]?.meta);
 
   for (const item of items) {
-    const itemHeight = estimateItemHeight(item);
-    if (currentItems.length && currentHeight + itemHeight > pageBodyLimit) {
-      flushPage();
+    const height = heights[item.key] || fallbackHeight(item);
+    if (current.length && currentHeight + height > limit) {
+      pages.push({ meta: items[0].meta, items: current });
+      current = [];
+      currentHeight = 0;
     }
-
-    currentItems.push(item);
-    currentHeight += itemHeight;
-
-    if (currentHeight >= pageBodyLimit) {
-      flushPage();
-    }
+    current.push(item);
+    currentHeight += height;
   }
 
-  if (currentItems.length || !pages.length) flushPage();
+  if (current.length || !pages.length) {
+    pages.push({ meta: items[0]?.meta || emptyMeta(), items: current.length ? current : [{ type: "empty", key: "empty" }] });
+  }
 
   return pages;
 }
 
-function estimateHeaderHeight({ fullName, jobTitle, contactLine, photo }) {
-  let height = photo ? 180 : 155;
-  if (fullName) height += 30;
-  if (jobTitle) height += 20;
-  if (contactLine) height += 32;
+function headerHeight(meta) {
+  if (!meta) return 0;
+  let height = meta.photo ? 180 : 155;
+  if (meta.fullName) height += 30;
+  if (meta.jobTitle) height += 20;
+  if (meta.contactLine) height += 32;
   return height;
 }
 
-function estimateSectionHeight(section) {
-  switch (section.type) {
+function fallbackHeight(item) {
+  switch (item.type) {
     case "objective":
       return 110;
     case "education":
-      return 70 + section.entries.length * 42;
-    case "experience":
-      return 78 + section.entries.reduce((sum, entry) => sum + 54 + (entry.bullets?.filter(Boolean).length || 0) * 22, 0);
-    case "skills":
-      return 80;
-    case "certifications":
-      return 70 + section.entries.length * 26;
-    case "projects":
-      return 78 + section.entries.reduce((sum, entry) => sum + 54 + (entry.bullets?.filter(Boolean).length || 0) * 22, 0);
-    default:
-      return 0;
-  }
-}
-
-function flattenItems(sections) {
-  const items = [];
-
-  for (const section of sections) {
-    if (section.type === "objective" || section.type === "education" || section.type === "skills" || section.type === "certifications") {
-      items.push(section);
-      continue;
-    }
-
-    if (section.type === "experience" || section.type === "projects") {
-      const startKey = `${section.key}-start`;
-      items.push({ ...section, type: `${section.type}-start`, key: startKey, entries: [] });
-      for (const entry of section.entries) {
-        items.push({ ...section, type: `${section.type}-entry`, key: `${section.key}-${entry.id}`, entry });
-      }
-    }
-  }
-
-  return items;
-}
-
-function estimateItemHeight(item) {
-  switch (item.type) {
-    case "objective":
-      return estimateSectionHeight(item);
-    case "education":
-      return estimateSectionHeight(item);
-    case "skills":
-      return estimateSectionHeight(item);
-    case "certifications":
-      return estimateSectionHeight(item);
+      return 120;
     case "experience-start":
     case "projects-start":
       return 42;
     case "experience-entry":
     case "projects-entry":
-      return estimateEntryHeight(item.entry);
+      return 120;
+    case "skills":
+      return 80;
+    case "certifications":
+      return 70;
     default:
-      return estimateSectionHeight(item);
+      return 100;
   }
 }
 
-function estimateEntryHeight(entry) {
-  return 54 + (entry.bullets?.filter(Boolean).length || 0) * 22;
+function emptyMeta() {
+  return {
+    fullName: "",
+    jobTitle: "",
+    contactLine: "",
+    photo: null,
+    photoNameAlign: "",
+    headerPaddingRight: "",
+  };
 }
