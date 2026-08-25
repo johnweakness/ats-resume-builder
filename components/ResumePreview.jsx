@@ -140,6 +140,37 @@ function renderSection(section) {
     );
   }
 
+  if (section.type === "experience-start") {
+    return <Section heading={section.heading} />;
+  }
+
+  if (section.type === "experience-entry") {
+    const exp = section.entry;
+    return (
+      <div className="space-y-1">
+        <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
+          <span>{exp.title}</span>
+          <span className="whitespace-nowrap font-bold">{exp.date}</span>
+        </div>
+        <div className="flex items-baseline justify-between gap-2 text-xs italic text-slate-600 sm:text-sm">
+          <span>{exp.role}</span>
+          {exp.link ? (
+            <a href={exp.link} target="_blank" rel="noreferrer" className="whitespace-nowrap not-italic text-blue-700 hover:underline">
+              {exp.link}
+            </a>
+          ) : null}
+        </div>
+        {exp.bullets?.filter(Boolean).length ? (
+          <ul className="mt-1.5 space-y-1 pl-4 list-disc text-xs leading-normal text-slate-700 sm:text-sm">
+            {exp.bullets.filter(Boolean).map((bullet, i) => (
+              <li key={i}>{bullet}</li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    );
+  }
+
   if (section.type === "skills") {
     return (
       <Section heading="Skills">
@@ -183,6 +214,37 @@ function renderSection(section) {
           ))}
         </div>
       </Section>
+    );
+  }
+
+  if (section.type === "projects-start") {
+    return <Section heading="Projects" />;
+  }
+
+  if (section.type === "projects-entry") {
+    const proj = section.entry;
+    return (
+      <div className="space-y-1">
+        <div className="flex items-baseline justify-between gap-2 text-xs font-bold text-slate-800 sm:text-sm">
+          <span>{proj.title}</span>
+          <span className="whitespace-nowrap font-bold">{proj.date}</span>
+        </div>
+        <div className="flex items-baseline justify-between gap-2 text-xs italic text-slate-600 sm:text-sm">
+          <span>{proj.role}</span>
+          {proj.link ? (
+            <a href={proj.link} target="_blank" rel="noreferrer" className="whitespace-nowrap not-italic text-blue-700 hover:underline">
+              {proj.link}
+            </a>
+          ) : null}
+        </div>
+        {proj.bullets?.filter(Boolean).length ? (
+          <ul className="mt-1.5 space-y-1 pl-4 list-disc text-xs leading-normal text-slate-700 sm:text-sm">
+            {proj.bullets.filter(Boolean).map((bullet, i) => (
+              <li key={i}>{bullet}</li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     );
   }
 
@@ -274,7 +336,6 @@ function buildPages(data) {
     sections.push({ type: "projects", key: "projects", entries: projects.filter((p) => p.title) });
   }
 
-  const pages = [];
   const pageMeta = {
     fullName,
     jobTitle,
@@ -283,51 +344,36 @@ function buildPages(data) {
     photoNameAlign: photo ? "" : "",
     headerPaddingRight: photo ? "pr-24 sm:pr-28" : "",
   };
-  const maxHeight = 820;
-  const pageBodyLimit = maxHeight - estimateHeaderHeight({ fullName, jobTitle, contactLine, photo });
-
-  let currentPage = [];
+  const pageBodyLimit = 820 - estimateHeaderHeight({ fullName, jobTitle, contactLine, photo });
+  const items = flattenItems(sections);
+  const pages = [];
+  let currentItems = [];
   let currentHeight = 0;
 
   const flushPage = () => {
     pages.push({
       meta: pageMeta,
-      sections: currentPage.length ? currentPage : [{ type: "empty", key: `empty-${pages.length}` }],
+      sections: currentItems.length ? currentItems : [{ type: "empty", key: `empty-${pages.length}` }],
     });
-    currentPage = [];
+    currentItems = [];
     currentHeight = 0;
   };
 
-  const addSection = (section) => {
-    const height = estimateSectionHeight(section);
-    if (currentHeight + height > pageBodyLimit && currentPage.length) {
+  for (const item of items) {
+    const itemHeight = estimateItemHeight(item);
+    if (currentItems.length && currentHeight + itemHeight > pageBodyLimit) {
       flushPage();
     }
-    currentPage.push(section);
-    currentHeight += height;
-  };
 
-  for (const section of sections) {
-    if (section.type === "experience" || section.type === "projects") {
-      const split = splitEntriesAcrossPages(section, pageBodyLimit, currentHeight);
-      for (const part of split) {
-        const height = estimateSectionHeight(part);
-        if (currentHeight + height > pageBodyLimit && currentPage.length) {
-          flushPage();
-        }
-        currentPage.push(part);
-        currentHeight += height;
-        if (currentHeight >= pageBodyLimit) {
-          flushPage();
-        }
-      }
-      continue;
+    currentItems.push(item);
+    currentHeight += itemHeight;
+
+    if (currentHeight >= pageBodyLimit) {
+      flushPage();
     }
-
-    addSection(section);
   }
 
-  if (currentPage.length || !pages.length) flushPage();
+  if (currentItems.length || !pages.length) flushPage();
 
   return pages;
 }
@@ -359,40 +405,48 @@ function estimateSectionHeight(section) {
   }
 }
 
-function splitEntriesAcrossPages(section, pageBodyLimit, currentHeight) {
-  const chunks = [];
-  let chunkEntries = [];
-  let chunkHeight = estimateSectionBaseHeight(section);
-  let available = pageBodyLimit - currentHeight;
+function flattenItems(sections) {
+  const items = [];
 
-  for (const entry of section.entries) {
-    const entryHeight = estimateEntryHeight(entry);
-    if (chunkEntries.length && chunkHeight + entryHeight > available) {
-      chunks.push({ ...section, entries: chunkEntries });
-      chunkEntries = [];
-      chunkHeight = estimateSectionBaseHeight(section);
-      available = pageBodyLimit;
+  for (const section of sections) {
+    if (section.type === "objective" || section.type === "education" || section.type === "skills" || section.type === "certifications") {
+      items.push(section);
+      continue;
     }
 
-    chunkEntries.push(entry);
-    chunkHeight += entryHeight;
+    if (section.type === "experience" || section.type === "projects") {
+      const startKey = `${section.key}-start`;
+      items.push({ ...section, type: `${section.type}-start`, key: startKey, entries: [] });
+      for (const entry of section.entries) {
+        items.push({ ...section, type: `${section.type}-entry`, key: `${section.key}-${entry.id}`, entry });
+      }
+    }
   }
 
-  if (chunkEntries.length) chunks.push({ ...section, entries: chunkEntries });
+  return items;
+}
 
-  return chunks.length ? chunks : [{ ...section, entries: [] }];
+function estimateItemHeight(item) {
+  switch (item.type) {
+    case "objective":
+      return estimateSectionHeight(item);
+    case "education":
+      return estimateSectionHeight(item);
+    case "skills":
+      return estimateSectionHeight(item);
+    case "certifications":
+      return estimateSectionHeight(item);
+    case "experience-start":
+    case "projects-start":
+      return 42;
+    case "experience-entry":
+    case "projects-entry":
+      return estimateEntryHeight(item.entry);
+    default:
+      return estimateSectionHeight(item);
+  }
 }
 
 function estimateEntryHeight(entry) {
   return 54 + (entry.bullets?.filter(Boolean).length || 0) * 22;
-}
-
-function estimateSectionBaseHeight(section) {
-  switch (section.type) {
-    case "experience":
-    case "projects":
-      return 36;
-    default:
-      return estimateSectionHeight(section);
-  }
 }
