@@ -25,7 +25,7 @@ export default function ResumePreview({ data }) {
   return (
     <div className="w-full max-w-[794px] mx-auto rounded-sm bg-white p-8 sm:p-12 shadow-md ring-1 ring-slate-900/5 text-slate-800">
       {/* Header */}
-      <header className="relative text-center">
+      <header className={`relative text-center ${photo ? "pr-24 sm:pr-28" : ""}`}>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-wide text-blue-900 uppercase">
             {fullName || "YOUR NAME"}
