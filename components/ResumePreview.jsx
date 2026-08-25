@@ -35,38 +35,46 @@ export default function ResumePreview({ data }) {
       <MeasurementLayer items={items} refsMap={measureRefs} />
 
       {pages.map((page, index) => (
-        <ResumePage key={index} page={page} pageNumber={index + 1} totalPages={pages.length} />
+        <ResumePage
+          key={index}
+          page={page}
+          pageNumber={index + 1}
+          totalPages={pages.length}
+          showHeader={index === 0}
+        />
       ))}
     </div>
   );
 }
 
-function ResumePage({ page, pageNumber, totalPages }) {
+function ResumePage({ page, pageNumber, totalPages, showHeader }) {
   const { fullName, jobTitle, contactLine, photo, photoNameAlign, headerPaddingRight } = page.meta;
 
   return (
     <section className="relative w-full overflow-hidden rounded-sm bg-white shadow-md ring-1 ring-slate-900/5">
       <div style={{ aspectRatio: "210 / 297", width: "100%" }}>
-        <div className="flex h-full flex-col p-8 text-slate-800 sm:p-12">
-          <header className={`relative ${headerPaddingRight} ${photo ? "text-left" : "text-center"}`}>
-            <div>
-              <h1 className={`text-2xl font-bold tracking-wide text-blue-900 uppercase sm:text-3xl ${photoNameAlign}`}>
-                {fullName || "YOUR NAME"}
-              </h1>
-              {jobTitle ? <p className={`mt-1 text-sm font-normal text-slate-700 sm:text-base ${photoNameAlign}`}>{jobTitle}</p> : null}
-              {contactLine ? (
-                <p className={photo ? "mt-1 border-b border-blue-700 pb-3 text-xs text-slate-700 sm:text-sm" : "mt-5 border-y border-slate-600 py-3 text-xs text-slate-600 sm:text-sm"}>
-                  {contactLine}
-                </p>
+        <div className={`flex h-full flex-col text-slate-800 ${showHeader ? "p-8 sm:p-12" : "px-8 pb-8 pt-4 sm:px-12 sm:pb-12 sm:pt-6"}`}>
+          {showHeader ? (
+            <header className={`relative ${headerPaddingRight} ${photo ? "text-left" : "text-center"}`}>
+              <div>
+                <h1 className={`text-2xl font-bold tracking-wide text-blue-900 uppercase sm:text-3xl ${photoNameAlign}`}>
+                  {fullName || "YOUR NAME"}
+                </h1>
+                {jobTitle ? <p className={`mt-1 text-sm font-normal text-slate-700 sm:text-base ${photoNameAlign}`}>{jobTitle}</p> : null}
+                {contactLine ? (
+                  <p className={photo ? "mt-1 border-b border-blue-700 pb-3 text-xs text-slate-700 sm:text-sm" : "mt-5 border-y border-slate-600 py-3 text-xs text-slate-600 sm:text-sm"}>
+                    {contactLine}
+                  </p>
+                ) : null}
+              </div>
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photo} alt="" className="absolute right-0 top-0 h-24 w-24 object-cover sm:h-28 sm:w-28" />
               ) : null}
-            </div>
-            {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photo} alt="" className="absolute right-0 top-0 h-24 w-24 object-cover sm:h-28 sm:w-28" />
-            ) : null}
-          </header>
+            </header>
+          ) : null}
 
-          <div className="mt-4 min-h-0 flex-1 overflow-hidden">
+          <div className={showHeader ? "mt-4 min-h-0 flex-1 overflow-hidden" : "min-h-0 flex-1 overflow-hidden"}>
             <div className="space-y-4 sm:space-y-5">
               {page.items.map((item) => (
                 <PageItem key={item.key} item={item} />
@@ -74,7 +82,7 @@ function ResumePage({ page, pageNumber, totalPages }) {
             </div>
           </div>
 
-          <div className="mt-3 text-right text-[10px] text-slate-400">
+          <div className={showHeader ? "mt-3 text-right text-[10px] text-slate-400" : "mt-2 text-right text-[10px] text-slate-400"}>
             Page {pageNumber} of {totalPages}
           </div>
         </div>
