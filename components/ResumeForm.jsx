@@ -9,7 +9,7 @@ const labelClass = "mb-1 block text-xs font-medium text-slate-600";
 
 const MAX_PHOTO_SIZE = 2 * 1024 * 1024; // 2MB
 
-export default function ResumeForm({ data, onChange, showFreshGradSections = false, templateId = "blank" }) {
+export default function ResumeForm({ data, onChange, showAdditionalSections = false }) {
   const [photoError, setPhotoError] = useState("");
 
   function set(field, value) {
@@ -162,6 +162,22 @@ export default function ResumeForm({ data, onChange, showFreshGradSections = fal
               placeholder="you@example.com"
             />
           </Field>
+          <Field label="LinkedIn (optional)">
+            <input
+              className={inputClass}
+              value={data.linkedin || ""}
+              onChange={(e) => set("linkedin", e.target.value)}
+              placeholder="linkedin.com/in/yourname"
+            />
+          </Field>
+          <Field label="Portfolio / Website (optional)">
+            <input
+              className={inputClass}
+              value={data.portfolio || ""}
+              onChange={(e) => set("portfolio", e.target.value)}
+              placeholder="yourportfolio.com"
+            />
+          </Field>
         </div>
       </Card>
 
@@ -172,6 +188,17 @@ export default function ResumeForm({ data, onChange, showFreshGradSections = fal
             value={data.objective}
             onChange={(e) => set("objective", e.target.value)}
             placeholder="e.g. Recent IT graduate skilled in web development (HTML, CSS, JavaScript), with hands-on experience building school projects. Hardworking, fast learner, and eager to contribute to a Junior Developer role."
+          />
+        </Field>
+      </Card>
+
+      <Card title="Skills">
+        <Field label="Separate skills with a semicolon ( ; )">
+          <textarea
+            className={`${inputClass} min-h-[80px]`}
+            value={data.skills}
+            onChange={(e) => set("skills", e.target.value)}
+            placeholder="React; Next.js; JavaScript; Tailwind CSS"
           />
         </Field>
       </Card>
@@ -402,7 +429,7 @@ export default function ResumeForm({ data, onChange, showFreshGradSections = fal
         </div>
       </Card>
 
-      {showFreshGradSections ? (
+      {showAdditionalSections ? (
         <>
           <CredentialSection
             title="Certifications"
@@ -434,40 +461,7 @@ export default function ResumeForm({ data, onChange, showFreshGradSections = fal
         </>
       ) : null}
 
-      {templateId === "ojt" ? (
-        <>
-          <ProfileTextCard title="Relevant Coursework" label="Subjects related to your preferred OJT role" value={data.relevantCoursework} onChange={(value) => set("relevantCoursework", value)} placeholder="e.g. Web Development; Database Management; Systems Analysis" />
-          <ProfileTextCard title="OJT Availability" label="Preferred role, required hours, or available schedule" value={data.availability} onChange={(value) => set("availability", value)} placeholder="e.g. Available for 486 required hours; seeking a Web Development OJT role." />
-        </>
-      ) : null}
-      {templateId === "working-student" ? (
-        <ProfileTextCard title="Work-Study Strengths" label="Strengths gained from balancing work and studies" value={data.workStudyStrengths} onChange={(value) => set("workStudyStrengths", value)} placeholder="e.g. Time management; reliability; customer service; multitasking" />
-      ) : null}
-      {templateId === "experienced" ? (
-        <ProfileTextCard title="Career Highlights" label="Your strongest measurable results" value={data.careerHighlights} onChange={(value) => set("careerHighlights", value)} placeholder="e.g. Increased customer retention by 18% and led three major product launches." />
-      ) : null}
-
-      <Card title="Skills">
-        <Field label="Separate skills with a semicolon ( ; )">
-          <textarea
-            className={`${inputClass} min-h-[80px]`}
-            value={data.skills}
-            onChange={(e) => set("skills", e.target.value)}
-            placeholder="React; Next.js; JavaScript; Tailwind CSS"
-          />
-        </Field>
-      </Card>
     </div>
-  );
-}
-
-function ProfileTextCard({ title, label, value, onChange, placeholder }) {
-  return (
-    <Card title={title}>
-      <Field label={label}>
-        <textarea className={`${inputClass} min-h-[80px]`} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
-      </Field>
-    </Card>
   );
 }
 

@@ -8,23 +8,20 @@ export default function ResumePreview({ data }) {
     location,
     phone,
     email,
+    linkedin,
+    portfolio,
     photo,
     objective,
-    templateId,
     education = [],
     experience = [],
     projects = [],
     certifications = [],
     seminarsTrainings = [],
     awardsAchievements = [],
-    relevantCoursework,
-    availability,
-    workStudyStrengths,
-    careerHighlights,
     skills,
   } = data;
 
-  const contactLine = [location, phone, email].filter(Boolean).join("   |   ");
+  const contactLine = [location, phone, email, linkedin, portfolio].filter(Boolean).join("   |   ");
 
   return (
     <div className="w-full max-w-[794px] mx-auto rounded-sm bg-white p-8 sm:p-12 shadow-md ring-1 ring-slate-900/5 text-slate-800">
@@ -58,7 +55,13 @@ export default function ResumePreview({ data }) {
         </Section>
       ) : null}
 
-      {templateId === "experienced" && careerHighlights ? <TextSection heading="Career Highlights" text={careerHighlights} /> : null}
+      {skills ? (
+        <Section heading="Skills">
+          <ul className="pl-4 list-disc text-xs sm:text-sm text-slate-700 leading-normal">
+            <li>{skills}</li>
+          </ul>
+        </Section>
+      ) : null}
 
       {/* Education */}
       {education.some((e) => e.degree || e.school) ? (
@@ -81,8 +84,6 @@ export default function ResumePreview({ data }) {
           </div>
         </Section>
       ) : null}
-
-      {templateId === "ojt" && relevantCoursework ? <TextSection heading="Relevant Coursework" text={relevantCoursework} /> : null}
 
       {/* Experience */}
       {experience.some((e) => e.title) ? (
@@ -120,7 +121,9 @@ export default function ResumePreview({ data }) {
         </Section>
       ) : null}
 
-      {templateId === "working-student" && workStudyStrengths ? <TextSection heading="Work-Study Strengths" text={workStudyStrengths} /> : null}
+      <CredentialPreview heading="Certifications" entries={certifications} />
+      <CredentialPreview heading="Seminars & Trainings" entries={seminarsTrainings} />
+      <CredentialPreview heading="Awards & Achievements" entries={awardsAchievements} />
 
       {/* Projects */}
       {projects.some((p) => p.title) ? (
@@ -158,19 +161,6 @@ export default function ResumePreview({ data }) {
         </Section>
       ) : null}
 
-      <CredentialPreview heading="Certifications" entries={certifications} />
-      <CredentialPreview heading="Seminars & Trainings" entries={seminarsTrainings} />
-      <CredentialPreview heading="Awards & Achievements" entries={awardsAchievements} />
-      {templateId === "ojt" && availability ? <TextSection heading="OJT Availability" text={availability} /> : null}
-
-      {/* Skills */}
-      {skills ? (
-        <Section heading="Skills">
-          <ul className="pl-4 list-disc text-xs sm:text-sm text-slate-700 leading-normal">
-            <li>{skills}</li>
-          </ul>
-        </Section>
-      ) : null}
     </div>
   );
 }
@@ -191,10 +181,6 @@ function CredentialPreview({ heading, entries }) {
       </ul>
     </Section>
   );
-}
-
-function TextSection({ heading, text }) {
-  return <Section heading={heading}><p className="text-xs sm:text-sm leading-relaxed text-slate-700">{text}</p></Section>;
 }
 
 function Section({ heading, children }) {

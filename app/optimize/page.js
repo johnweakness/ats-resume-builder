@@ -209,7 +209,7 @@ export default function OptimizePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <ResumeForm data={resume} onChange={setResume} />
+            <ResumeForm data={resume} onChange={setResume} showAdditionalSections />
             <div className="lg:sticky lg:top-8 lg:self-start">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Live Preview
