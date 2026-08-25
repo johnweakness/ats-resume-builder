@@ -290,7 +290,7 @@ function paginateItems(items, heights) {
   const pages = [];
   let current = [];
   let currentHeight = 0;
-  const limit = PAGE_HEIGHT - headerHeight(items[0]?.meta) - 80;
+  const limit = PAGE_HEIGHT - headerHeight(items[0]?.meta) - 140;
 
   for (const item of items) {
     const height = (heights[item.key] || fallbackHeight(item)) + itemGapHeight(item);
