@@ -10,12 +10,17 @@ export default function ResumePreview({ data }) {
     email,
     photo,
     objective,
+    templateId,
     education = [],
     experience = [],
     projects = [],
     certifications = [],
     seminarsTrainings = [],
     awardsAchievements = [],
+    relevantCoursework,
+    availability,
+    workStudyStrengths,
+    careerHighlights,
     skills,
   } = data;
 
@@ -53,6 +58,8 @@ export default function ResumePreview({ data }) {
         </Section>
       ) : null}
 
+      {templateId === "experienced" && careerHighlights ? <TextSection heading="Career Highlights" text={careerHighlights} /> : null}
+
       {/* Education */}
       {education.some((e) => e.degree || e.school) ? (
         <Section heading="Education">
@@ -74,6 +81,8 @@ export default function ResumePreview({ data }) {
           </div>
         </Section>
       ) : null}
+
+      {templateId === "ojt" && relevantCoursework ? <TextSection heading="Relevant Coursework" text={relevantCoursework} /> : null}
 
       {/* Experience */}
       {experience.some((e) => e.title) ? (
@@ -110,6 +119,8 @@ export default function ResumePreview({ data }) {
           </div>
         </Section>
       ) : null}
+
+      {templateId === "working-student" && workStudyStrengths ? <TextSection heading="Work-Study Strengths" text={workStudyStrengths} /> : null}
 
       {/* Projects */}
       {projects.some((p) => p.title) ? (
@@ -150,6 +161,7 @@ export default function ResumePreview({ data }) {
       <CredentialPreview heading="Certifications" entries={certifications} />
       <CredentialPreview heading="Seminars & Trainings" entries={seminarsTrainings} />
       <CredentialPreview heading="Awards & Achievements" entries={awardsAchievements} />
+      {templateId === "ojt" && availability ? <TextSection heading="OJT Availability" text={availability} /> : null}
 
       {/* Skills */}
       {skills ? (
@@ -179,6 +191,10 @@ function CredentialPreview({ heading, entries }) {
       </ul>
     </Section>
   );
+}
+
+function TextSection({ heading, text }) {
+  return <Section heading={heading}><p className="text-xs sm:text-sm leading-relaxed text-slate-700">{text}</p></Section>;
 }
 
 function Section({ heading, children }) {

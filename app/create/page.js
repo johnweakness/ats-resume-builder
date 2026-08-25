@@ -108,7 +108,7 @@ export default function CreatePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <ResumeForm data={data} onChange={setData} showFreshGradSections={template === "fresh-grad"} />
+          <ResumeForm data={data} onChange={setData} templateId={template} showFreshGradSections={template === "fresh-grad"} />
           <div className="lg:sticky lg:top-8 lg:self-start">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Live Preview
