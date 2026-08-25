@@ -183,7 +183,7 @@ export default function OptimizePage() {
                 <span className="text-xl leading-none">⚠️</span>
                 <div>
                   <p className={`text-sm font-semibold ${errorKind === "quota" ? "text-amber-800" : "text-red-700"}`}>
-                    {errorKind === "quota" ? "Google AI Studio limit reached" : "We couldn't process your file"}
+                    {errorKind === "quota" ? "Limit reached. Please try again later." : "We couldn't process your file"}
                   </p>
                   <p className={`mt-1 text-sm ${errorKind === "quota" ? "text-amber-700" : "text-red-600"}`}>{error}</p>
                 </div>

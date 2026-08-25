@@ -171,7 +171,7 @@ export async function POST(request) {
       return Response.json(
         {
           error: isQuotaError
-            ? "Google AI Studio limit reached. Please try again later."
+            ? "Limit reached. Please try again later."
             : "The AI is having trouble right now. Please try again in a moment.",
           code: isQuotaError ? "AI_QUOTA_LIMIT" : "AI_UNAVAILABLE",
         },
