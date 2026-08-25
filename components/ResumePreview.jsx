@@ -275,50 +275,59 @@ function buildPages(data) {
   }
 
   const pages = [];
-  let currentSections = [];
-  let currentHeight = estimateHeaderHeight({ fullName, jobTitle, photo, contactLine });
+  const pageMeta = {
+    fullName,
+    jobTitle,
+    contactLine,
+    photo,
+    photoNameAlign: photo ? "" : "",
+    headerPaddingRight: photo ? "pr-24 sm:pr-28" : "",
+  };
   const maxHeight = 820;
+  const pageBodyLimit = maxHeight - estimateHeaderHeight({ fullName, jobTitle, contactLine, photo });
+
+  let currentPage = [];
+  let currentHeight = 0;
+
+  const flushPage = () => {
+    pages.push({
+      meta: pageMeta,
+      sections: currentPage.length ? currentPage : [{ type: "empty", key: `empty-${pages.length}` }],
+    });
+    currentPage = [];
+    currentHeight = 0;
+  };
+
+  const addSection = (section) => {
+    const height = estimateSectionHeight(section);
+    if (currentHeight + height > pageBodyLimit && currentPage.length) {
+      flushPage();
+    }
+    currentPage.push(section);
+    currentHeight += height;
+  };
 
   for (const section of sections) {
-    const chunks = chunkSection(section, maxHeight - currentHeight);
-
-    for (const chunk of chunks) {
-      const height = estimateSectionHeight(chunk);
-      if ((currentSections.length && currentHeight + height > maxHeight) || (!currentSections.length && height > maxHeight)) {
-        pages.push({
-          meta: {
-            fullName,
-            jobTitle,
-            contactLine,
-            photo,
-            photoNameAlign: photo ? "" : "",
-            headerPaddingRight: photo ? "pr-24 sm:pr-28" : "",
-          },
-          sections: currentSections,
-        });
-        currentSections = [];
-        currentHeight = estimateHeaderHeight({ fullName, jobTitle, photo, contactLine });
+    if (section.type === "experience" || section.type === "projects") {
+      const split = splitEntriesAcrossPages(section, pageBodyLimit, currentHeight);
+      for (const part of split) {
+        const height = estimateSectionHeight(part);
+        if (currentHeight + height > pageBodyLimit && currentPage.length) {
+          flushPage();
+        }
+        currentPage.push(part);
+        currentHeight += height;
+        if (currentHeight >= pageBodyLimit) {
+          flushPage();
+        }
       }
-      currentSections.push(chunk);
-      currentHeight += height;
+      continue;
     }
+
+    addSection(section);
   }
 
-  if (!currentSections.length) {
-    currentSections = [];
-  }
-
-  pages.push({
-    meta: {
-      fullName,
-      jobTitle,
-      contactLine,
-      photo,
-      photoNameAlign: photo ? "" : "",
-      headerPaddingRight: photo ? "pr-24 sm:pr-28" : "",
-    },
-    sections: currentSections.length ? currentSections : [{ type: "empty", key: "empty" }],
-  });
+  if (currentPage.length || !pages.length) flushPage();
 
   return pages;
 }
@@ -350,35 +359,40 @@ function estimateSectionHeight(section) {
   }
 }
 
-function chunkSection(section, remainingHeight) {
-  if (section.type !== "experience" && section.type !== "projects") {
-    return [section];
-  }
-
+function splitEntriesAcrossPages(section, pageBodyLimit, currentHeight) {
   const chunks = [];
-  let current = [];
-  let currentHeight = section.type === "experience" || section.type === "projects" ? 36 : estimateSectionHeight({ ...section, entries: [] });
+  let chunkEntries = [];
+  let chunkHeight = estimateSectionBaseHeight(section);
+  let available = pageBodyLimit - currentHeight;
 
   for (const entry of section.entries) {
     const entryHeight = estimateEntryHeight(entry);
-    if ((current.length && currentHeight + entryHeight > remainingHeight && section.entries.length > 1) || (!current.length && entryHeight > remainingHeight)) {
-      if (current.length) {
-        chunks.push({ ...section, entries: current });
-      }
-      current = [];
-      currentHeight = 36;
+    if (chunkEntries.length && chunkHeight + entryHeight > available) {
+      chunks.push({ ...section, entries: chunkEntries });
+      chunkEntries = [];
+      chunkHeight = estimateSectionBaseHeight(section);
+      available = pageBodyLimit;
     }
-    current.push(entry);
-    currentHeight += entryHeight;
+
+    chunkEntries.push(entry);
+    chunkHeight += entryHeight;
   }
 
-  if (current.length) {
-    chunks.push({ ...section, entries: current });
-  }
+  if (chunkEntries.length) chunks.push({ ...section, entries: chunkEntries });
 
-  return chunks.length ? chunks : [section];
+  return chunks.length ? chunks : [{ ...section, entries: [] }];
 }
 
 function estimateEntryHeight(entry) {
   return 54 + (entry.bullets?.filter(Boolean).length || 0) * 22;
+}
+
+function estimateSectionBaseHeight(section) {
+  switch (section.type) {
+    case "experience":
+    case "projects":
+      return 36;
+    default:
+      return estimateSectionHeight(section);
+  }
 }
