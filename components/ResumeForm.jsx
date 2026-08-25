@@ -9,8 +9,9 @@ const labelClass = "mb-1 block text-xs font-medium text-slate-600";
 
 const MAX_PHOTO_SIZE = 2 * 1024 * 1024; // 2MB
 
-export default function ResumeForm({ data, onChange, showAdditionalSections = false }) {
+export default function ResumeForm({ data, onChange, showAdditionalSections = false, resumeType = "" }) {
   const [photoError, setPhotoError] = useState("");
+  const noExperience = resumeType === "no-experience";
 
   function set(field, value) {
     onChange({ ...data, [field]: value });
@@ -181,13 +182,13 @@ export default function ResumeForm({ data, onChange, showAdditionalSections = fa
         </div>
       </Card>
 
-      <Card title="Professional Summary">
-        <Field label="2-3 sentences about your skills, experience, and what you can offer an employer">
+      <Card title={noExperience ? "Objective" : "Professional Summary"}>
+        <Field label={noExperience ? "1-2 lines about your degree or track and skills that match the role" : "2-4 lines tailored to the role, including experience, key skills, and a measurable result"}>
           <textarea
             className={`${inputClass} min-h-[100px]`}
             value={data.objective}
             onChange={(e) => set("objective", e.target.value)}
-            placeholder="e.g. Recent IT graduate skilled in web development (HTML, CSS, JavaScript), with hands-on experience building school projects. Hardworking, fast learner, and eager to contribute to a Junior Developer role."
+              placeholder={noExperience ? "e.g. Recent IT graduate with hands-on web development skills, seeking an entry-level developer role." : "e.g. Web developer with 3+ years of experience building responsive applications that improved user engagement by 25%."}
           />
         </Field>
       </Card>
@@ -265,7 +266,7 @@ export default function ResumeForm({ data, onChange, showAdditionalSections = fa
         </div>
       </Card>
 
-      <Card title="Experience">
+      <Card title={noExperience ? "Internship" : "Experience"}>
         <div className="space-y-5">
           {data.experience.length === 0 ? (
             <p className="text-xs text-slate-400">
@@ -342,10 +343,7 @@ export default function ResumeForm({ data, onChange, showAdditionalSections = fa
               </div>
             </div>
           ))}
-          <AddButton
-            onClick={() => addEntry("experience", emptyExperience)}
-            label="Add work experience"
-          />
+          <AddButton onClick={() => addEntry("experience", emptyExperience)} label={noExperience ? "Add internship" : "Add work experience"} />
         </div>
       </Card>
 
@@ -437,24 +435,6 @@ export default function ResumeForm({ data, onChange, showAdditionalSections = fa
             section="certifications"
             addLabel="Add certification"
             onAdd={() => addEntry("certifications", emptyCredential)}
-            onRemove={removeEntry}
-            onUpdate={updateEntry}
-          />
-          <CredentialSection
-            title="Seminars & Trainings"
-            entries={data.seminarsTrainings || []}
-            section="seminarsTrainings"
-            addLabel="Add seminar or training"
-            onAdd={() => addEntry("seminarsTrainings", emptyCredential)}
-            onRemove={removeEntry}
-            onUpdate={updateEntry}
-          />
-          <CredentialSection
-            title="Awards & Achievements"
-            entries={data.awardsAchievements || []}
-            section="awardsAchievements"
-            addLabel="Add award or achievement"
-            onAdd={() => addEntry("awardsAchievements", emptyCredential)}
             onRemove={removeEntry}
             onUpdate={updateEntry}
           />
